@@ -1,0 +1,14 @@
+.dockerignore
+.env
+.git
+.github
+.gitignore
+.pm2
+Dockerfile
+docker-compose.yml
+npm-debug.log
+README.md
+build
+dist
+.next
+node_modules

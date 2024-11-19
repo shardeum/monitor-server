@@ -1,5 +1,5 @@
 # Node.js LTS 10.x.x from Docker Hub
-FROM node:16
+FROM node:18.16.1
 
 # Create app directory
 WORKDIR /usr/src/app
@@ -8,7 +8,7 @@ WORKDIR /usr/src/app
 # A wildcard is used to ensure both package.json AND package-lock.json are copied
 # where available (npm@5+)
 COPY package*.json ./
-# RUN npm install
+RUN npm install
 
 # Bundle app source
 COPY . .
@@ -17,6 +17,5 @@ COPY . .
 # Note: ports can be exposed at runtime too with --expose or -p <port>:<port>
 EXPOSE 3000
 
-RUN npm run compile
 # Define run command
 CMD [ "node", "build/src/server.js" ]
