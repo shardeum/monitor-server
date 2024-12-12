@@ -41,8 +41,8 @@
     "monitor-server": "build/src/server.js"
   },
   "dependencies": {
-    "@shardus/archiver-discovery": "git+https://github.com/shardeum/lib-archiver-discovery#dev",
-    "@shardus/monitor-client": "git+https://github.com/shardeum/x-monitor-client#dev",
+    "@shardus/archiver-discovery": "git+https://github.com/shardeum/lib-archiver-discovery#itn4",
+    "@shardus/monitor-client": "git+https://github.com/shardeum/x-monitor-client#itn4",
     "axios": "0.24.0",
     "bcrypt-nodejs": "0.0.3",
     "body-parser": "1.18.3",
