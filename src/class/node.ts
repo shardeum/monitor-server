@@ -22,7 +22,7 @@ import {
   mapToObjectRecursive,
   MarkerCount,
 } from '../utils';
-import {getFromArchiver} from '@shardus/archiver-discovery';
+import {getFromArchiver} from '@shardeum-foundation/lib-archiver-discovery';
 
 type TxCoverageData = {
   txId: string;
