@@ -19,6 +19,7 @@ const invalidIPs = require('./invalidIPs');
 const appVersions = require('./appVersions');
 const version = require('./version');
 import {notifyActionStarted} from './notifyActionStarted';
+import {listFoundationNodes} from './foundation';
 
 export const Controller = {
   joining,
@@ -41,5 +42,6 @@ export const Controller = {
   invalidIPs,
   appVersions,
   version,
-  notifyActionStarted
+  notifyActionStarted,
+  listFoundationNodes
 };
