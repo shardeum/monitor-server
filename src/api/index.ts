@@ -42,6 +42,7 @@ router.get('/status',  (req, res) => {
   res.status(200).send({ status: 'online', env: config.env });
 });
 router.get('/app-versions', requireAuthInProduction, Controller.appVersions);
+router.get('/list-foundation-nodes', requireAuthInProduction, Controller.listFoundationNodes);
 
 router.post(
   '/joining',
