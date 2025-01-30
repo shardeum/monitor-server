@@ -119,6 +119,7 @@ export interface ActiveReport {
   countedEvents: CountedEvent[];
   appData: NodeInfoAppData;
   memory: MemoryInfo;
+  activeTimestamp: number;
 }
 
 export type CountedEvent = {
@@ -157,6 +158,7 @@ export type NodeInfoAppData = {
   latestVersion: string;
   operatorCLIVersion: string;
   operatorGUIVersion: string;
+  appStartupTimestamp: number;
 };
 
 export interface PartitionInfo {

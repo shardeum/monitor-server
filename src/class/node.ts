@@ -1164,6 +1164,13 @@ export class Node {
       for (const nodeId in this.crashedNodes) {
         updatedNodes[nodeId] = this.crashedNodes[nodeId];
       }
+      const updatedNodeIds = Object.keys(updatedNodes);
+      for (const updatedNodeId in updatedNodeIds){
+        updatedNodes[updatedNodeId] = {
+          ...updatedNodes[updatedNodeId],
+          activeTimestamp: this.history[updatedNodeId].active
+        }
+      }
       return {
         nodes: {
           active: updatedNodes,
@@ -1183,8 +1190,25 @@ export class Node {
       };
     } else {
       ProfilerModule.profilerInstance.profileSectionEnd('GET_report');
+      const updatedNodes = this.nodes.active
+      const updatedNodeIds = Object.keys(updatedNodes);
+      for (let i = 0; i < updatedNodeIds.length; i++) {
+        const updatedNodeId = updatedNodeIds[i];
+        const data = updatedNodes[updatedNodeId]
+        if (!data || !data.appData) continue;
+        const activeTimestamp = updatedNodeId in this.history ? this.history[updatedNodeId].active : undefined
+        updatedNodes[updatedNodeId] = {
+          ...data,
+          activeTimestamp
+        }
+      }
       return {
-        nodes: this.nodes,
+        nodes: {
+          active: updatedNodes,
+          syncing: this.nodes.syncing,
+          joining: this.nodes.joining,
+          standby: this.nodes.standby,
+        },
         mode: this.mode,
         totalInjected: this.totalTxInjected,
         totalRejected: this.totalTxRejected,
