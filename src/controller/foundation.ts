@@ -30,7 +30,9 @@ async function getListOfFoundationNodes(): Promise<unknown[]>   {
     try {
         const results = await Promise.all([
             getFoundationNodes('https://storage.googleapis.com/shardeum-info-and-counts/network/itn4/nodeInfo.json'),
-            getFoundationNodes('https://storage.googleapis.com/shardeum-info-and-counts/network/bb/nodeInfo.json')
+            getFoundationNodes('https://storage.googleapis.com/shardeum-info-and-counts/network/bb/nodeInfo.json'),
+            getFoundationNodes('https://storage.googleapis.com/shardeum-info-and-counts/network/dev-us/nodeInfo.json'),
+            getFoundationNodes('https://storage.googleapis.com/shardeum-info-and-counts/network/dev-apac/nodeInfo.json')
         ])
         for(let i = 0; i < results.length; i++) {
             nodes.push(...results[i].data.nodes)
