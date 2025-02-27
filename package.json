@@ -44,8 +44,8 @@
     "monitor-server": "build/src/server.js"
   },
   "dependencies": {
-    "@shardeum-foundation/lib-archiver-discovery": "1.1.2-prerelease.2",
-    "@shardeum-foundation/monitor-client": "2.8.6",
+    "@shardeum-foundation/lib-archiver-discovery": "1.1.2-prerelease.3",
+    "@shardeum-foundation/monitor-client": "2.8.7-prerelease.1",
     "axios": "0.24.0",
     "bcrypt-nodejs": "0.0.3",
     "body-parser": "1.18.3",
