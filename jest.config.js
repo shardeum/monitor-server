@@ -18,5 +18,13 @@ module.exports = {
     "json-summary",
     "text",
     "lcov"
-  ]
+  ],
+  coverageThreshold: {
+    global: {
+      branches: 3.15,
+      functions: 2.17,
+      lines: 2.17,
+      statements: 2.27
+    }
+  }
 }; 
