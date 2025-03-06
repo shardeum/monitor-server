@@ -50,7 +50,7 @@
     "monitor-server": "build/src/server.js"
   },
   "dependencies": {
-    "@shardeum-foundation/lib-archiver-discovery": "1.2.0-prerelease.0",
+    "@shardeum-foundation/lib-archiver-discovery": "1.2.0-prerelease.1",
     "@shardeum-foundation/monitor-client": "2.9.0-prerelease.0",
     "axios": "0.24.0",
     "bcrypt-nodejs": "0.0.3",
