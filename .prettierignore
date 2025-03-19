@@ -1,1 +1,5 @@
-src/**/*.ts
+build
+node_modules
+dist
+target
+bin
