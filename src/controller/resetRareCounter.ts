@@ -1,6 +1,6 @@
-import { NextFunction, Response } from "express";
-import { Node } from "../class/node";
-import { RequestWithBody } from "../interface/interface";
+import {NextFunction, Response} from 'express';
+import {Node} from '../class/node';
+import {RequestWithBody} from '../interface/interface';
 
 const resetRareCounter = async (
   req: RequestWithBody,

@@ -1,7 +1,7 @@
-import { NextFunction, Response } from "express";
-import { Node } from "../class/node";
-import { RequestWithBody } from "../interface/interface";
-const { generateNodeForTesting } = require("../class/mock");
+import {NextFunction, Response} from 'express';
+import {Node} from '../class/node';
+import {RequestWithBody} from '../interface/interface';
+const {generateNodeForTesting} = require('../class/mock');
 const generatedNodes = generateNodeForTesting(10000);
 
 const mock = (req: RequestWithBody, res: Response, next: NextFunction) => {

@@ -1,69 +1,72 @@
-require("dotenv").config();
-import {UserDB} from './class/user'
+require('dotenv').config();
+import {UserDB} from './class/user';
 
-global.User = new UserDB()
-import {join} from "path/posix";
-import {Node} from "./class/node";
+global.User = new UserDB();
+import {join} from 'path/posix';
+import {Node} from './class/node';
 import MemoryModule, {
-  memoryReportingInstance
-} from "./class/profiler/MemoryReporting";
-import NestedCounters from "./class/profiler/nestedCounters";
-import Profiler from "./class/profiler/profiler";
-import Statistics from "./class/profiler/Statistics";
+  memoryReportingInstance,
+} from './class/profiler/MemoryReporting';
+import NestedCounters from './class/profiler/nestedCounters';
+import Profiler from './class/profiler/profiler';
+import Statistics from './class/profiler/Statistics';
 
-require("dotenv").config();
+require('dotenv').config();
 
-const {promisify} = require("util");
-const http = require("http");
-const WebSocket = require("ws");
-const Tail = require("tail").Tail;
-const express = require("express");
-const morgan = require("morgan");
-const bodyParser = require("body-parser");
-const cookieParser = require("cookie-parser");
-const compress = require("compression");
-const methodOverride = require("method-override");
-const cors = require("cors");
-const helmet = require("helmet");
-const path = require("path");
-const fs = require("fs");
-const rfs = require("rotating-file-stream");
-import Logger = require("./class/logger");
+const {promisify} = require('util');
+const http = require('http');
+const WebSocket = require('ws');
+const Tail = require('tail').Tail;
+const express = require('express');
+const morgan = require('morgan');
+const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
+const compress = require('compression');
+const methodOverride = require('method-override');
+const cors = require('cors');
+const helmet = require('helmet');
+const path = require('path');
+const fs = require('fs');
+const rfs = require('rotating-file-stream');
+import Logger = require('./class/logger');
 
 const app = express();
 
-const logDirectory = path.join(__dirname, "req-log");
-const clientModule = require.resolve("@shardeum-foundation/monitor-client");
+const logDirectory = path.join(__dirname, 'req-log');
+const clientModule = require.resolve('@shardeum-foundation/monitor-client');
 const clientDirectory = path.dirname(clientModule);
-const viewDirectory = path.join(clientDirectory + "/views");
-const staticDirectory = path.resolve(clientDirectory + "/public");
-const clientVersionDirectory = path.join(clientDirectory + "/package.json");
-const serverVersionDirectory = path.join(path.dirname(path.dirname(path.dirname(require.main.filename))), 'package.json');
+const viewDirectory = path.join(clientDirectory + '/views');
+const staticDirectory = path.resolve(clientDirectory + '/public');
+const clientVersionDirectory = path.join(clientDirectory + '/package.json');
+const serverVersionDirectory = path.join(
+  path.dirname(path.dirname(path.dirname(require.main.filename))),
+  'package.json'
+);
 
-const clientPackageJson = fs.readFileSync(clientVersionDirectory, 'utf8')
-const serverPackageJson = fs.readFileSync(serverVersionDirectory, 'utf8')
+const clientPackageJson = fs.readFileSync(clientVersionDirectory, 'utf8');
+const serverPackageJson = fs.readFileSync(serverVersionDirectory, 'utf8');
 
-const clientPackageData = JSON.parse(clientPackageJson)
-const serverPackageData = JSON.parse(serverPackageJson)
+const clientPackageData = JSON.parse(clientPackageJson);
+const serverPackageData = JSON.parse(serverPackageJson);
 
-export const clientPackageVersion = clientPackageData.version
-export const serverPackageVersion = serverPackageData.version
+export const clientPackageVersion = clientPackageData.version;
+export const serverPackageVersion = serverPackageData.version;
 
-console.log("Client directory", clientDirectory)
+console.log('Client directory', clientDirectory);
 import logsConfig from './config/monitor-log';
-import {mainLogger} from "./class/logger";
-import { NodeList } from './interface/interface';
-import { setupArchiverDiscovery } from '@shardeum-foundation/lib-archiver-discovery';
-import { compareIPs } from './utils';
-import { healthCheckRouter } from './routes/healthCheck';
+import {mainLogger} from './class/logger';
+import {NodeList} from './interface/interface';
+import {setupArchiverDiscovery} from '@shardeum-foundation/lib-archiver-discovery';
+import {compareIPs} from './utils';
+import {healthCheckRouter} from './routes/healthCheck';
 
 const logDir = `monitor-logs`;
-const baseDir = ".";
+const baseDir = '.';
 logsConfig.dir = logDir;
 
 let fileWatcher;
 const server = http.createServer(app);
-const {Server} = require("socket.io");
+const {Server} = require('socket.io');
 const io = new Server(server);
 let fileSubscribers = {};
 let file = `${baseDir}/${logDir}/history.log`;
@@ -72,30 +75,30 @@ const filePath = path.resolve(file);
 http.get[promisify.custom] = function getAsync(options) {
   return new Promise((resolve, reject) => {
     http
-      .get(options, (response) => {
-        response.end = new Promise((resolve) => response.on("end", resolve));
+      .get(options, response => {
+        response.end = new Promise(resolve => response.on('end', resolve));
         resolve(response);
       })
-      .on("error", reject);
+      .on('error', reject);
   });
 };
 const get = promisify(http.get);
 
 async function getJSON(url) {
   const res = await get(url);
-  let body = "";
-  res.on("data", (chunk) => (body += chunk));
+  let body = '';
+  res.on('data', chunk => (body += chunk));
   await res.end;
   return JSON.parse(body);
 }
 
 // const Node = require("./class/node");
 
-const APIRoutes = require("./api");
+const APIRoutes = require('./api');
 
 // config variables
-const CONFIG = require("./config").default
-console.log("CONFIG", CONFIG)
+const CONFIG = require('./config').default;
+console.log('CONFIG', CONFIG);
 if (process.env.PORT) {
   CONFIG.port = process.env.PORT;
 }
@@ -111,12 +114,12 @@ if (CONFIG.restoreFromBackup) {
   try {
     let jsonData = fs.readFileSync(CONFIG.backup.nodelist_path, 'utf8');
     const restoreNodelist = JSON.parse(jsonData);
-    console.log("Found node list backup file restoring. . . ");
+    console.log('Found node list backup file restoring. . . ');
     global.node.setNodeList(restoreNodelist);
 
     jsonData = fs.readFileSync(CONFIG.backup.networkStat_path, 'utf8');
     const restoreNetworkStats = JSON.parse(jsonData);
-    console.log("Found network stat backup file restoring. . . ");
+    console.log('Found network stat backup file restoring. . . ');
     global.node.setNetworkStat(restoreNetworkStats);
   } catch (err) {
     console.error(err);
@@ -132,14 +135,14 @@ let statistics = new Statistics(
     counters: [],
     watchers: {},
     timers: [],
-    manualStats: ["cpuPercent"],
+    manualStats: ['cpuPercent'],
   },
   {}
 );
 let memoryReporter = new MemoryModule(app);
 statistics.startSnapshots();
 statistics.on(
-  "snapshot",
+  'snapshot',
   memoryReportingInstance.updateCpuPercent.bind(memoryReportingInstance)
 );
 
@@ -148,20 +151,20 @@ memoryReporter.registerEndpoints();
 nestedCounter.registerEndpoints();
 profiler.registerEndpoints();
 
-console.log("absoluteClientPath", clientDirectory);
-console.log("view Directory", viewDirectory);
-console.log("static Directory", staticDirectory);
+console.log('absoluteClientPath', clientDirectory);
+console.log('view Directory', viewDirectory);
+console.log('static Directory', staticDirectory);
 
-app.set("views", viewDirectory);
-app.engine("html", require("ejs").renderFile);
+app.set('views', viewDirectory);
+app.engine('html', require('ejs').renderFile);
 app.use(express.static(staticDirectory));
 
 // ensure log directory exists
 fs.existsSync(logDirectory) || fs.mkdirSync(logDirectory);
 
 // create a rotating write stream
-let accessLogStream = rfs("access.log", {
-  interval: "1d", // rotate daily
+let accessLogStream = rfs('access.log', {
+  interval: '1d', // rotate daily
   path: logDirectory,
 });
 
@@ -170,8 +173,8 @@ let accessLogStream = rfs("access.log", {
 // app.use(morgan("dev"));
 
 // Parse body params and attach them to req.body
-app.use(bodyParser.json({limit: "50mb"}));
-app.use(bodyParser.urlencoded({limit: "50mb", extended: true}));
+app.use(bodyParser.json({limit: '50mb'}));
+app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
 
 app.use(cookieParser());
 app.use(compress());
@@ -181,56 +184,56 @@ app.use(cors());
 
 global.User.create({
   username: CONFIG.username,
-  password: CONFIG.password
-})
+  password: CONFIG.password,
+});
 
-app.use("/", healthCheckRouter)
+app.use('/', healthCheckRouter);
 
-app.get("/", (req, res) => {
+app.get('/', (req, res) => {
   const numActiveNodes = node.getActiveList().length;
   const maxNodeCount = 200;
 
   if (numActiveNodes > maxNodeCount) {
-    return res.redirect('/large-network')
+    return res.redirect('/large-network');
   }
 
-  res.render("index.html", {title: "test"});
+  res.render('index.html', {title: 'test'});
 });
-app.get("/signin", (req, res) => {
-  res.render("signin.html", {title: "test"});
+app.get('/signin', (req, res) => {
+  res.render('signin.html', {title: 'test'});
 });
-app.get("/log", (req, res) => {
-  console.log("log server page");
-  res.render("log.html", {title: "test"});
-});
-
-app.get("/favicon.ico", (req, res) => {
-  return res.send()
+app.get('/log', (req, res) => {
+  console.log('log server page');
+  res.render('log.html', {title: 'test'});
 });
 
-app.get("/history-log", (req, res) => {
-  console.log("log server page");
-  res.render("history-log.html", {title: "test"});
+app.get('/favicon.ico', (req, res) => {
+  return res.send();
 });
 
-app.get("/large-network", (req, res) => {
-  res.render("large-network.html");
+app.get('/history-log', (req, res) => {
+  console.log('log server page');
+  res.render('history-log.html', {title: 'test'});
 });
 
-app.get("/node-loads", (req, res) => {
-  res.render("node-loads.html");
+app.get('/large-network', (req, res) => {
+  res.render('large-network.html');
 });
 
-app.get("/sync-details", (req, res) => {
-  res.render("sync-details.html");
+app.get('/node-loads', (req, res) => {
+  res.render('node-loads.html');
 });
 
-app.get("/sync", (req, res) => {
-  res.render("sync.html");
+app.get('/sync-details', (req, res) => {
+  res.render('sync-details.html');
 });
 
-app.get("/chart", (req, res) => {
-  res.render("chart.html");
+app.get('/sync', (req, res) => {
+  res.render('sync.html');
+});
+
+app.get('/chart', (req, res) => {
+  res.render('chart.html');
 });
 
 app.get('/monitor-events', (_req, res) => {
@@ -241,7 +244,7 @@ app.get('/app-versions', (_req, res) => {
   res.render('app-versions.html');
 });
 
-app.get("/summary", async (req, res) => {
+app.get('/summary', async (req, res) => {
   try {
     // Ping a node for the current cycle
     let cycle: any = {};
@@ -249,11 +252,15 @@ app.get("/summary", async (req, res) => {
     let configUrl;
     let sortOrder = req.query.sortOrder || 'asc';
 
-    const removed = global.node.removedNodes[global.node.counter - 1] || []
-    const node = global.node.getRandomNode()
+    const removed = global.node.removedNodes[global.node.counter - 1] || [];
+    const node = global.node.getRandomNode();
     if (node) {
-      const externalIp = node.nodeIpInfo.externalIp ? node.nodeIpInfo.externalIp : "NoExternalIp";
-      const externalPort = node.nodeIpInfo.externalPort ? node.nodeIpInfo.externalPort : "NoExternalPort";
+      const externalIp = node.nodeIpInfo.externalIp
+        ? node.nodeIpInfo.externalIp
+        : 'NoExternalIp';
+      const externalPort = node.nodeIpInfo.externalPort
+        ? node.nodeIpInfo.externalPort
+        : 'NoExternalPort';
 
       cycleUrl = `http://${externalIp}:${externalPort}/sync-newest-cycle`;
       configUrl = `http://${externalIp}:${externalPort}/config`;
@@ -261,17 +268,23 @@ app.get("/summary", async (req, res) => {
         cycle = await getJSON(cycleUrl);
         cycle = cycle.newestCycle;
       } catch (e) {
-        console.log("Cannot get cycle from node");
+        console.log('Cannot get cycle from node');
       }
     }
 
     function sortNodes(nodes, sortOrder) {
       return nodes.sort((a, b) => {
-         // Determine availability status
-        const isAFullyUnavailable = a.ip === "NoExternalIp" && a.port === "NoExternalPort";
-        const isBFullyUnavailable = b.ip === "NoExternalIp" && b.port === "NoExternalPort";
-        const isAPartiallyUnavailable = !isAFullyUnavailable && (a.ip === "NoExternalIp" || a.port === "NoExternalPort");
-        const isBPartiallyUnavailable = !isBFullyUnavailable && (b.ip === "NoExternalIp" || b.port === "NoExternalPort");
+        // Determine availability status
+        const isAFullyUnavailable =
+          a.ip === 'NoExternalIp' && a.port === 'NoExternalPort';
+        const isBFullyUnavailable =
+          b.ip === 'NoExternalIp' && b.port === 'NoExternalPort';
+        const isAPartiallyUnavailable =
+          !isAFullyUnavailable &&
+          (a.ip === 'NoExternalIp' || a.port === 'NoExternalPort');
+        const isBPartiallyUnavailable =
+          !isBFullyUnavailable &&
+          (b.ip === 'NoExternalIp' || b.port === 'NoExternalPort');
 
         // Fully unavailable nodes sorted last
         if (isAFullyUnavailable && !isBFullyUnavailable) return 1;
@@ -295,19 +308,24 @@ app.get("/summary", async (req, res) => {
 
     function getSortedNodeLinks(nodes, sortOrder) {
       let nodesArray = nodes.map(node => {
-        const ip = node && node.nodeIpInfo && node.nodeIpInfo.externalIp ? node.nodeIpInfo.externalIp : "NoExternalIp";
-        const port = node && node.nodeIpInfo && node.nodeIpInfo.externalPort ? node.nodeIpInfo.externalPort : "NoExternalPort";
+        const ip =
+          node && node.nodeIpInfo && node.nodeIpInfo.externalIp
+            ? node.nodeIpInfo.externalIp
+            : 'NoExternalIp';
+        const port =
+          node && node.nodeIpInfo && node.nodeIpInfo.externalPort
+            ? node.nodeIpInfo.externalPort
+            : 'NoExternalPort';
 
         return {
           ip: ip,
           port: port,
-          link: `<a href="log?ip=${ip}&port=${port}" target="_blank">[${ip}:${port}]</a>`
+          link: `<a href="log?ip=${ip}&port=${port}" target="_blank">[${ip}:${port}]</a>`,
         };
       });
 
       return sortNodes(nodesArray, sortOrder).map(node => node.link);
     }
-
 
     const summary = {
       joining: [],
@@ -317,24 +335,26 @@ app.get("/summary", async (req, res) => {
     };
 
     Object.keys(global.node.nodes).forEach(state => {
-      summary[state] = getSortedNodeLinks(Object.values(global.node.nodes[state]), sortOrder);
+      summary[state] = getSortedNodeLinks(
+        Object.values(global.node.nodes[state]),
+        sortOrder
+      );
     });
 
     let removedNodesArray = removed.map(node => {
-      const ip = node.ip ? node.ip : "NoExternalIp";
-      const port = node.port ? node.port : "NoExternalPort";
+      const ip = node.ip ? node.ip : 'NoExternalIp';
+      const port = node.port ? node.port : 'NoExternalPort';
 
       return {
-        nodeIpInfo:{
+        nodeIpInfo: {
           externalIp: ip,
           externalPort: port,
-          link: `<a href="log?ip=${ip}&port=${port}" target="_blank">[${ip}:${port}]</a>`
-        }
+          link: `<a href="log?ip=${ip}&port=${port}" target="_blank">[${ip}:${port}]</a>`,
+        },
       };
     });
 
     let removedNodeLinks = getSortedNodeLinks(removedNodesArray, sortOrder);
-
 
     const page = `<!DOCTYPE html>
       <html>
@@ -390,7 +410,7 @@ app.get("/summary", async (req, res) => {
           </div>
           <div class="content">
               <code id="joiningNodes">
-                ${summary.joining.join(" ")}
+                ${summary.joining.join(' ')}
               </code>
           </div>
 
@@ -404,7 +424,7 @@ app.get("/summary", async (req, res) => {
           </div>
           <div class="content">
               <code id="syncingNodes">
-                ${summary.syncing.join(" ")}
+                ${summary.syncing.join(' ')}
               </code>
             </p>
           </div>
@@ -419,7 +439,7 @@ app.get("/summary", async (req, res) => {
           </div>
           <div class="content">
               <code id="standbyNodes">
-                ${summary.standby.join(" ")}
+                ${summary.standby.join(' ')}
               </code>
             </p>
           </div>
@@ -435,7 +455,7 @@ app.get("/summary", async (req, res) => {
           </div>
           <div class="content">
               <code id="activeNodes">
-                ${summary.active.join(" ")}
+                ${summary.active.join(' ')}
               </code>
             </p>
           </div>
@@ -450,7 +470,7 @@ app.get("/summary", async (req, res) => {
            <div class="content">
             <p>
               <code id="removedNodes">
-                ${removedNodeLinks.join(" ")}
+                ${removedNodeLinks.join(' ')}
               </code>
             </p>
           </div>
@@ -468,7 +488,7 @@ app.get("/summary", async (req, res) => {
           <div class="collapsible">Cycle Details</div>
           <div class="content">
             <pre id="cycleDetails">
-              ${cycle ? JSON.stringify(cycle, null, 2) : "Cannot get cycle from nodes"}
+              ${cycle ? JSON.stringify(cycle, null, 2) : 'Cannot get cycle from nodes'}
             </pre>
           </div>
 
@@ -547,12 +567,12 @@ app.get("/summary", async (req, res) => {
       </html>
       `;
 
-    res.setHeader("Content-Type", "text/html");
+    res.setHeader('Content-Type', 'text/html');
     res.send(page);
   } catch (e) {
-    console.error('Caught error in /summary page', e)
-    Logger.mainLogger.error(`Error while rendering /summary page`)
-    Logger.mainLogger.error(e)
+    console.error('Caught error in /summary page', e);
+    Logger.mainLogger.error(`Error while rendering /summary page`);
+    Logger.mainLogger.error(e);
   }
 });
 
@@ -575,27 +595,27 @@ app.get('/get-newest-cycle', async (req, res) => {
   }
 });
 
-app.use("/api", APIRoutes);
+app.use('/api', APIRoutes);
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
-  const error = new Error("API not found!");
-  error.message = "404";
+  const error = new Error('API not found!');
+  error.message = '404';
   return next(error);
 });
 
 app.use((err, req, res, next) => {
-  Logger.mainLogger.error('Caught error in error handling middleware', err)
-  Logger.mainLogger.error('Request:', req.url)
+  Logger.mainLogger.error('Caught error in error handling middleware', err);
+  Logger.mainLogger.error('Request:', req.url);
 
   return res.status(err.status || 500).json({
     error: {
       message: err.message,
       status: err.status,
-      stack: CONFIG.env === "development" ? err.stack : {},
+      stack: CONFIG.env === 'development' ? err.stack : {},
     },
     status: err.status,
-  })
+  });
 });
 
 process.on('uncaughtException', err => {
@@ -606,28 +626,28 @@ process.on('uncaughtException', err => {
 Logger.mainLogger.info(`file: ${file}`);
 Logger.mainLogger.info(`filePath: ${path.resolve(file)}`);
 
-io.on("connection", (socket) => {
-  console.log("A client connected", socket.id);
-  io.emit("versions", {clientPackageVersion, serverPackageVersion});
+io.on('connection', socket => {
+  console.log('A client connected', socket.id);
+  io.emit('versions', {clientPackageVersion, serverPackageVersion});
   if (!fileSubscribers[socket.id]) {
     fileSubscribers[socket.id] = true;
-    fs.readFile(filePath, "utf-8", (error, data) => {
+    fs.readFile(filePath, 'utf-8', (error, data) => {
       if (!data) {
-        data = "Found no previous log.";
+        data = 'Found no previous log.';
       }
       // console.log('data', data.split("\n"))
-      io.emit("old-data", data);
+      io.emit('old-data', data);
     });
   }
-  socket.on("message", (msg) => {
+  socket.on('message', msg => {
     if (!fileWatcher) {
       fileWatcher = new Tail(filePath, {fromBeginning: false});
       fileWatcher.watch();
-      fileWatcher.on("line", (data) => {
-        io.emit("new-history-log", data);
+      fileWatcher.on('line', data => {
+        io.emit('new-history-log', data);
       });
     } else {
-      console.log("File watcher already existed.");
+      console.log('File watcher already existed.');
     }
   });
 });
@@ -660,49 +680,54 @@ io.on("connection", (socket) => {
 // })
 
 const start = () => {
-  server.listen(CONFIG.port, (err) => {
+  server.listen(CONFIG.port, err => {
     if (err) {
       console.error(err);
       throw err;
     }
     console.log(`server started on port ${CONFIG.port} (${CONFIG.env})`);
-    console.log('history logger', Logger.historyLogger.info)
+    console.log('history logger', Logger.historyLogger.info);
     Logger.historyLogger.info(`started`);
   });
 };
 
-let archiverConfigFilePath = path.resolve(process.cwd(), '../archiverConfig.json')
+let archiverConfigFilePath = path.resolve(
+  process.cwd(),
+  '../archiverConfig.json'
+);
 if (fs.existsSync(archiverConfigFilePath)) {
-  console.log('Found archiverConfig.json file at', archiverConfigFilePath)
+  console.log('Found archiverConfig.json file at', archiverConfigFilePath);
 } else {
-  archiverConfigFilePath = path.resolve(process.cwd(), 'archiverConfig.json')
+  archiverConfigFilePath = path.resolve(process.cwd(), 'archiverConfig.json');
 }
 
-console.log(`ARCHIVER_INFO ENV`, process.env.ARCHIVER_INFO)
-console.log(`archiverConfigFilePath`, archiverConfigFilePath)
+console.log(`ARCHIVER_INFO ENV`, process.env.ARCHIVER_INFO);
+console.log(`archiverConfigFilePath`, archiverConfigFilePath);
 
 setupArchiverDiscovery({
   customConfigPath: archiverConfigFilePath,
-  customArchiverListEnv: 'ARCHIVER_INFO'
-}).then(() => {
-  console.log('Finished setting up archiver discovery!');
-  start();
-}).catch((e) => {
-  console.error('Error setting up archiver discovery', e);
+  customArchiverListEnv: 'ARCHIVER_INFO',
 })
+  .then(() => {
+    console.log('Finished setting up archiver discovery!');
+    start();
+  })
+  .catch(e => {
+    console.error('Error setting up archiver discovery', e);
+  });
 
 process.on('SIGINT', async () => {
   graceful_shutdown();
-})
+});
 //gracefull shutdown suppport in windows. should mirror what SIGINT does in linux
-process.on('message', async (msg) => {
+process.on('message', async msg => {
   if (msg == 'shutdown') {
     graceful_shutdown();
   }
-})
+});
 process.on('SIGTERM', async () => {
   graceful_shutdown();
-})
+});
 
 function graceful_shutdown() {
   try {

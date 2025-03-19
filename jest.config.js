@@ -14,17 +14,13 @@ module.exports = {
     '!src/**/*.d.ts',
     '!src/**/__tests__/**',
   ],
-  coverageReporters: [
-    "json-summary",
-    "text",
-    "lcov"
-  ],
+  coverageReporters: ['json-summary', 'text', 'lcov'],
   coverageThreshold: {
     global: {
       branches: 3.15,
       functions: 2.17,
       lines: 2.17,
-      statements: 2.27
-    }
-  }
-}; 
+      statements: 2.27,
+    },
+  },
+};

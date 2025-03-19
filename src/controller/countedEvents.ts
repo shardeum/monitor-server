@@ -11,7 +11,7 @@ const countedEvents = (req: RequestWithBody, res: Response) => {
 
     for (let eventCategories of countedEventsMap.values()) {
       for (let countedEvent of eventCategories.values()) {
-        countedEvents.push(countedEvent)
+        countedEvents.push(countedEvent);
       }
     }
 

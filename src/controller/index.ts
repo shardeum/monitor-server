@@ -43,5 +43,5 @@ export const Controller = {
   appVersions,
   version,
   notifyActionStarted,
-  listFoundationNodes
+  listFoundationNodes,
 };

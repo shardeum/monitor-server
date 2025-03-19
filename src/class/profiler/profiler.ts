@@ -1,4 +1,4 @@
-let NestedCountersModule = require("./nestedCounters");
+let NestedCountersModule = require('./nestedCounters');
 
 let profilerSelfReporting = false;
 
@@ -11,7 +11,7 @@ class Profiler {
   netExternalStackHeight;
   server;
   constructor(server) {
-    console.log("Initialising Profiler");
+    console.log('Initialising Profiler');
     this.sectionTimes = {};
     this.eventCounters = new Map();
     this.stackHeight = 0;
@@ -20,12 +20,12 @@ class Profiler {
     this.server = server;
     profilerInstance = this;
 
-    this.profileSectionStart("_total", true);
-    this.profileSectionStart("_internal_total", true);
+    this.profileSectionStart('_total', true);
+    this.profileSectionStart('_internal_total', true);
   }
 
   registerEndpoints() {
-    this.server.get("/perf", (req, res) => {
+    this.server.get('/perf', (req, res) => {
       let result = this.printAndClearReport(1);
       res.write(result);
       res.end();
@@ -38,7 +38,7 @@ class Profiler {
     if (section != null && section.started === true) {
       if (profilerSelfReporting)
         NestedCountersModule.nestedCountersInstance.countEvent(
-          "profiler-start-error",
+          'profiler-start-error',
           sectionName
         );
       return;
@@ -46,7 +46,7 @@ class Profiler {
 
     if (section == null) {
       let t = BigInt(0);
-      section = { name: sectionName, total: t, c: 0, internal };
+      section = {name: sectionName, total: t, c: 0, internal};
       this.sectionTimes[sectionName] = section;
     }
 
@@ -56,25 +56,25 @@ class Profiler {
 
     if (internal === false) {
       NestedCountersModule.nestedCountersInstance.countEvent(
-        "profiler",
+        'profiler',
         sectionName
       );
 
       this.stackHeight++;
       if (this.stackHeight === 1) {
-        this.profileSectionStart("_totalBusy", true);
-        this.profileSectionStart("_internal_totalBusy", true);
+        this.profileSectionStart('_totalBusy', true);
+        this.profileSectionStart('_internal_totalBusy', true);
       }
-      if (sectionName === "net-internl") {
+      if (sectionName === 'net-internl') {
         this.netInternalStackHeight++;
         if (this.netInternalStackHeight === 1) {
-          this.profileSectionStart("_internal_net-internl", true);
+          this.profileSectionStart('_internal_net-internl', true);
         }
       }
-      if (sectionName === "net-externl") {
+      if (sectionName === 'net-externl') {
         this.netExternalStackHeight++;
         if (this.netExternalStackHeight === 1) {
-          this.profileSectionStart("_internal_net-externl", true);
+          this.profileSectionStart('_internal_net-externl', true);
         }
       }
     }
@@ -85,7 +85,7 @@ class Profiler {
     if (section == null || section.started === false) {
       if (profilerSelfReporting)
         NestedCountersModule.nestedCountersInstance.countEvent(
-          "profiler-end-error",
+          'profiler-end-error',
           sectionName
         );
       return;
@@ -99,25 +99,25 @@ class Profiler {
     if (internal === false) {
       if (profilerSelfReporting)
         NestedCountersModule.nestedCountersInstance.countEvent(
-          "profiler-end",
+          'profiler-end',
           sectionName
         );
 
       this.stackHeight--;
       if (this.stackHeight === 0) {
-        this.profileSectionEnd("_totalBusy", true);
-        this.profileSectionEnd("_internal_totalBusy", true);
+        this.profileSectionEnd('_totalBusy', true);
+        this.profileSectionEnd('_internal_totalBusy', true);
       }
-      if (sectionName === "net-internl") {
+      if (sectionName === 'net-internl') {
         this.netInternalStackHeight--;
         if (this.netInternalStackHeight === 0) {
-          this.profileSectionEnd("_internal_net-internl", true);
+          this.profileSectionEnd('_internal_net-internl', true);
         }
       }
-      if (sectionName === "net-externl") {
+      if (sectionName === 'net-externl') {
         this.netExternalStackHeight--;
         if (this.netExternalStackHeight === 0) {
-          this.profileSectionEnd("_internal_net-externl", true);
+          this.profileSectionEnd('_internal_net-externl', true);
         }
       }
     }
@@ -131,15 +131,15 @@ class Profiler {
   getTotalBusyInternal() {
     if (profilerSelfReporting)
       NestedCountersModule.nestedCountersInstance.countEvent(
-        "profiler-note",
-        "getTotalBusyInternal"
+        'profiler-note',
+        'getTotalBusyInternal'
       );
 
-    this.profileSectionEnd("_internal_total", true);
-    let internalTotalBusy = this.sectionTimes["_internal_totalBusy"];
-    let internalTotal = this.sectionTimes["_internal_total"];
-    let internalNetInternl = this.sectionTimes["_internal_net-internl"];
-    let internalNetExternl = this.sectionTimes["_internal_net-externl"];
+    this.profileSectionEnd('_internal_total', true);
+    let internalTotalBusy = this.sectionTimes['_internal_totalBusy'];
+    let internalTotal = this.sectionTimes['_internal_total'];
+    let internalNetInternl = this.sectionTimes['_internal_net-internl'];
+    let internalNetExternl = this.sectionTimes['_internal_net-externl'];
     let duty = BigInt(0);
     let netInternlDuty = BigInt(0);
     let netExternlDuty = BigInt(0);
@@ -160,7 +160,7 @@ class Profiler {
           (BigInt(100) * internalNetExternl.total) / internalTotal.total;
       }
     }
-    this.profileSectionStart("_internal_total", true);
+    this.profileSectionStart('_internal_total', true);
 
     //clear these timers
     internalTotal.total = BigInt(0);
@@ -177,7 +177,7 @@ class Profiler {
 
   clearTimes() {
     for (let key in this.sectionTimes) {
-      if (key.startsWith("_internal")) continue;
+      if (key.startsWith('_internal')) continue;
 
       if (this.sectionTimes.hasOwnProperty(key)) {
         let section = this.sectionTimes[key];
@@ -187,19 +187,19 @@ class Profiler {
   }
 
   printAndClearReport(delta) {
-    this.profileSectionEnd("_total", true);
+    this.profileSectionEnd('_total', true);
 
-    let result = "Profile Sections:\n";
+    let result = 'Profile Sections:\n';
     let d1 = this.cleanInt(1e6); // will get us ms
     let divider = BigInt(d1);
 
-    let totalSection = this.sectionTimes["_total"];
-    let totalBusySection = this.sectionTimes["_totalBusy"];
-    console.log("totalSection from printAndClearReport", totalSection);
+    let totalSection = this.sectionTimes['_total'];
+    let totalBusySection = this.sectionTimes['_totalBusy'];
+    console.log('totalSection from printAndClearReport', totalSection);
 
     let lines = [];
     for (let key in this.sectionTimes) {
-      if (key.startsWith("_internal")) continue;
+      if (key.startsWith('_internal')) continue;
 
       if (this.sectionTimes.hasOwnProperty(key)) {
         let section = this.sectionTimes[key];
@@ -219,17 +219,17 @@ class Profiler {
         }`;
         //section.total = BigInt(0)
 
-        lines.push({ line, totalMs });
+        lines.push({line, totalMs});
       }
     }
 
     lines.sort((l1, l2) => Number(l2.totalMs - l1.totalMs));
 
-    result = result + lines.map((line) => line.line).join("\n");
+    result = result + lines.map(line => line.line).join('\n');
 
     this.clearTimes();
 
-    this.profileSectionStart("_total", true);
+    this.profileSectionStart('_total', true);
     return result;
   }
 }

@@ -1,6 +1,6 @@
-import { NextFunction, Response } from "express";
-import { Node } from "../class/node";
-import { RequestWithBody } from "../interface/interface";
+import {NextFunction, Response} from 'express';
+import {Node} from '../class/node';
+import {RequestWithBody} from '../interface/interface';
 
 const active = (req: RequestWithBody, res: Response, next: NextFunction) => {
   const nodeId: string | undefined = req.body.nodeId;

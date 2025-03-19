@@ -1,8 +1,8 @@
-const validateReport = require("../middleware/validateReport");
-const Logger = require("../class/logger");
-import { NextFunction, Response } from "express";
-import { Node } from "../class/node";
-import { RequestWithBody } from "../interface/interface";
+const validateReport = require('../middleware/validateReport');
+const Logger = require('../class/logger');
+import {NextFunction, Response} from 'express';
+import {Node} from '../class/node';
+import {RequestWithBody} from '../interface/interface';
 
 const heartbeat = (req: RequestWithBody, res: Response, next: NextFunction) => {
   try {
@@ -10,7 +10,7 @@ const heartbeat = (req: RequestWithBody, res: Response, next: NextFunction) => {
     const data = req.body.data;
     const isReportValid = validateReport(data);
     if (!isReportValid)
-      Logger.errorLogger.error("Report is invalid", nodeId, data);
+      Logger.errorLogger.error('Report is invalid', nodeId, data);
     if (nodeId && isReportValid && data.nodeIpInfo && data.currentLoad) {
       let Node: Node = global.node;
       Node.heartbeat(nodeId, data);
@@ -25,8 +25,8 @@ const heartbeat = (req: RequestWithBody, res: Response, next: NextFunction) => {
       res.status(400).send(resp);
     }
   } catch (e) {
-    Logger.mainLogger.error(e)
-      res.status(500).send('');
+    Logger.mainLogger.error(e);
+    res.status(500).send('');
   }
 };
 

@@ -38,8 +38,8 @@ export function binarySearch<T, E = Partial<T>>(
       return a.toString() > b.toString()
         ? 1
         : a.toString() < b.toString()
-        ? -1
-        : 0;
+          ? -1
+          : 0;
     };
   }
   let m = 0;
@@ -236,7 +236,7 @@ export class MarkerCount {
   }
 
   note(nodeId: string, marker: string) {
-    if(!this.nodeMap.has(nodeId)) {
+    if (!this.nodeMap.has(nodeId)) {
       this.nodeMap.set(nodeId, marker);
       this.increment(marker);
     } else {

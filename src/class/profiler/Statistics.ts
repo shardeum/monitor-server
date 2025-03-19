@@ -1,16 +1,16 @@
-const path = require("path");
-const fs = require("fs");
-import { Readable } from "stream";
-import EventEmitter from "events";
-const utils = require("../../utils");
-let { nestedCountersInstance } = require("./nestedCounters");
+const path = require('path');
+const fs = require('fs');
+import {Readable} from 'stream';
+import EventEmitter from 'events';
+const utils = require('../../utils');
+let {nestedCountersInstance} = require('./nestedCounters');
 
 interface Statistics {
   intervalDuration: number;
   context: any;
   counterDefs: any[];
   watcherDefs: any;
-  timerDefs: { [name: string]: TimerRing };
+  timerDefs: {[name: string]: TimerRing};
   manualStatDefs: any[];
   interval: NodeJS.Timeout;
   snapshotWriteFns: any[];
@@ -19,7 +19,7 @@ interface Statistics {
   counters: any;
   watchers: any;
   timers: any;
-  manualStats: { [name: string]: ManualRing };
+  manualStats: {[name: string]: ManualRing};
 }
 
 export let statisticsInstance;
@@ -41,7 +41,7 @@ class Statistics extends EventEmitter {
     },
     context
   ) {
-    console.log("Initialising Statistics");
+    console.log('Initialising Statistics');
     super();
     this.intervalDuration = config.interval || 1;
     this.intervalDuration = this.intervalDuration * 1000;
@@ -59,7 +59,7 @@ class Statistics extends EventEmitter {
     statisticsInstance = this;
     if (config.save) {
       // Pipe stream to file
-      const file = path.join(baseDir, "statistics.tsv");
+      const file = path.join(baseDir, 'statistics.tsv');
       const fileWriteStream = fs.createWriteStream(file);
       const statsReadStream = this.getStream();
       statsReadStream.pipe(fileWriteStream);
@@ -86,8 +86,8 @@ class Statistics extends EventEmitter {
   }
 
   startSnapshots() {
-    console.log("Starting statistics snapshots...");
-    const tabSeperatedHeaders = "Name\tValue\tTime\n";
+    console.log('Starting statistics snapshots...');
+    const tabSeperatedHeaders = 'Name\tValue\tTime\n';
     this._pushToStream(tabSeperatedHeaders);
     if (!this.interval)
       this.interval = setInterval(
@@ -106,7 +106,7 @@ class Statistics extends EventEmitter {
     const counter = this.counters[counterName];
     if (!counter) throw new Error(`Counter '${counterName}' is undefined.`);
     counter.increment();
-    nestedCountersInstance.countEvent("statistics", counterName);
+    nestedCountersInstance.countEvent('statistics', counterName);
   }
 
   setManualStat(manualStatName, value) {
@@ -219,7 +219,7 @@ class Statistics extends EventEmitter {
 
   _takeSnapshot() {
     const time = new Date().toISOString();
-    let tabSeperatedValues = "";
+    let tabSeperatedValues = '';
 
     for (const counter in this.counters) {
       this.counters[counter].snapshot();
@@ -251,7 +251,7 @@ class Statistics extends EventEmitter {
     }
 
     this._pushToStream(tabSeperatedValues);
-    this.emit("snapshot");
+    this.emit('snapshot');
   }
 
   _pushToStream(data) {
@@ -293,7 +293,7 @@ class Ring {
       }
     }
     let avg = total > 0 ? sum / total : 0;
-    return { min, max, avg, allVals };
+    return {min, max, avg, allVals};
   }
   save(value) {
     this.elements[this.index] = value;
@@ -302,7 +302,7 @@ class Ring {
   average() {
     let sum = 0;
     let total = 0;
-    console.log("elements", this.elements);
+    console.log('elements', this.elements);
     for (const element of this.elements) {
       if (_exists(element)) {
         sum += Number(element);
@@ -410,7 +410,7 @@ class ManualRing {
  * @param thing The parameter to check
  */
 function _exists(thing) {
-  return typeof thing !== "undefined" && thing !== null;
+  return typeof thing !== 'undefined' && thing !== null;
 }
 
 export default Statistics;

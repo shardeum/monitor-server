@@ -54,13 +54,20 @@ export class Node {
   txCoverageMap: {[key: string]: TxCoverageData};
   txCoverageCounter: {[key: string]: number};
   countedEvents: MonitorCountedEventMap;
-  bogonIpCount: any
-  invalidIpCount: any
+  bogonIpCount: any;
+  invalidIpCount: any;
   appData: Map<string, NodeInfoAppData>; // Map nodeId to appData
   joiningAppData: Map<string, NodeInfoAppData>; // Map nodeId to appData
   syncAppData: Map<string, NodeInfoAppData>; // Map nodeId to appData
   networkId: string; // Network ID to detect bad heartbeats
-  mode: 'forming' | 'processing' | 'safety' | 'recovery' | 'restart' | 'restore' | 'shutdown'
+  mode:
+    | 'forming'
+    | 'processing'
+    | 'safety'
+    | 'recovery'
+    | 'restart'
+    | 'restore'
+    | 'shutdown';
   cycleRecordStart: number;
   cycleRecordCounter: number;
   cycleDuration: number;
@@ -69,7 +76,6 @@ export class Node {
   queryArchiverIntervalTime: number;
 
   constructor() {
-
     this.totalTxInjected = 0;
     this.totalTxRejected = 0;
     this.totalTxExpired = 0;
@@ -91,21 +97,24 @@ export class Node {
     this.txCoverageMap = {};
     this.txCoverageCounter = {};
     this.countedEvents = new Map();
-    this.bogonIpCount = {joining: 0, joined: 0, active: 0, heartbeat: 0}
-    this.invalidIpCount = {joining: 0, joined: 0, active: 0, heartbeat: 0}
+    this.bogonIpCount = {joining: 0, joined: 0, active: 0, heartbeat: 0};
+    this.invalidIpCount = {joining: 0, joined: 0, active: 0, heartbeat: 0};
     this.appData = new Map<string, NodeInfoAppData>();
     this.joiningAppData = new Map<string, NodeInfoAppData>();
     this.syncAppData = new Map<string, NodeInfoAppData>();
     this.networkId = 'none';
 
-    this.nodes = this._createEmptyNodelist()
+    this.nodes = this._createEmptyNodelist();
 
-    this.cycleMarkerCount = new MarkerCount()
-    this.cycleRecordCounter = -1
-    this.queryArchiverRetries()
+    this.cycleMarkerCount = new MarkerCount();
+    this.cycleRecordCounter = -1;
+    this.queryArchiverRetries();
 
-    this.queryArchiverIntervalTime = 20 * 60 * 1000 // Update cycleRecord every 20 minutes
-    this.queryArchiverInterval = setInterval(this.queryArchiverRetries.bind(this), this.queryArchiverIntervalTime)
+    this.queryArchiverIntervalTime = 20 * 60 * 1000; // Update cycleRecord every 20 minutes
+    this.queryArchiverInterval = setInterval(
+      this.queryArchiverRetries.bind(this),
+      this.queryArchiverIntervalTime
+    );
 
     setInterval(this.summarizeTxCoverage.bind(this), 10000);
     // setInterval(this.updateRejectedTps.bind(this), this.reportInterval);
@@ -128,79 +137,103 @@ export class Node {
     // Upon receiving cycleInfo, apply it and resolve
     // If no cycleInfo is received after 150 seconds, reject
     return new Promise((resolve, reject) => {
-      let retiresLeft = 15
+      let retiresLeft = 15;
       const retryTimer = setInterval(() => {
         this.getArchiverCycleRecord()
           .then(cycleRecord => {
-            clearInterval(retryTimer)
-            resolve(cycleRecord)
+            clearInterval(retryTimer);
+            resolve(cycleRecord);
           })
           .catch(err => {
-            Logger.mainLogger.warn(`Could not get archiver cycle record`)
-            Logger.mainLogger.warn(err)
+            Logger.mainLogger.warn(`Could not get archiver cycle record`);
+            Logger.mainLogger.warn(err);
             if (--retiresLeft === 0) {
-              clearInterval(retryTimer)
-              reject()
+              clearInterval(retryTimer);
+              reject();
             }
-            Logger.mainLogger.warn(`Retries left: ${retiresLeft}. Retrying in 10 seconds...`)
-          })
-      }, 10000)
-    }).then((cycleRecord: any) => {
-      if (cycleRecord && cycleRecord.cycleInfo && cycleRecord.cycleInfo.length > 0) {
-        this.applyArchiverCycleData(cycleRecord)
-        Logger.mainLogger.info(
-          `Archiver cycle record obtained. Ready to receive and validate heartbeats.`
-        )
-      } else {
-        Logger.mainLogger.error(`Received empty cycle record from archiver`)
-      }
-    }).catch(err => {
-      Logger.mainLogger.error(
-        'FAILED TO GET ARCHIVER CYCLE RECORD. '
-        + (this.cycleRecordCounter < 0) ? 'Will be unable to validate heartbeats.' : 'Using old values'
-      )
-      Logger.mainLogger.error(err)
+            Logger.mainLogger.warn(
+              `Retries left: ${retiresLeft}. Retrying in 10 seconds...`
+            );
+          });
+      }, 10000);
     })
+      .then((cycleRecord: any) => {
+        if (
+          cycleRecord &&
+          cycleRecord.cycleInfo &&
+          cycleRecord.cycleInfo.length > 0
+        ) {
+          this.applyArchiverCycleData(cycleRecord);
+          Logger.mainLogger.info(
+            `Archiver cycle record obtained. Ready to receive and validate heartbeats.`
+          );
+        } else {
+          Logger.mainLogger.error(`Received empty cycle record from archiver`);
+        }
+      })
+      .catch(err => {
+        Logger.mainLogger.error(
+          'FAILED TO GET ARCHIVER CYCLE RECORD. ' +
+            (this.cycleRecordCounter < 0)
+            ? 'Will be unable to validate heartbeats.'
+            : 'Using old values'
+        );
+        Logger.mainLogger.error(err);
+      });
   }
 
   async getArchiverCycleRecord(): Promise<unknown> {
     const cycleRecord: any = await getFromArchiver('cycleinfo/1');
-    Logger.mainLogger.info(`Getting archiver cycle record ${JSON.stringify(cycleRecord)}`)
-    if (cycleRecord===null) {
-      throw new Error(`Unable to query cycleInfo from any archiver.`)
+    Logger.mainLogger.info(
+      `Getting archiver cycle record ${JSON.stringify(cycleRecord)}`
+    );
+    if (cycleRecord === null) {
+      throw new Error(`Unable to query cycleInfo from any archiver.`);
     }
     if (cycleRecord.cycleInfo == null || cycleRecord.cycleInfo.length === 0) {
-      throw new Error(`Received empty cycleInfo from archiver. ${JSON.stringify(cycleRecord)}`)
+      throw new Error(
+        `Received empty cycleInfo from archiver. ${JSON.stringify(cycleRecord)}`
+      );
     }
     return cycleRecord;
   }
 
   applyArchiverCycleData(cycleRecord) {
-    if (cycleRecord == null) return
-    if (cycleRecord.cycleInfo == null) return
-    if (cycleRecord.cycleInfo.length === 0) return
-    Logger.mainLogger.info(`Creating archiver cycle record with data: ${JSON.stringify(cycleRecord)}`)
-    this.cycleRecordStart = cycleRecord.cycleInfo[0].start
-    this.cycleRecordCounter = cycleRecord.cycleInfo[0].counter
-    this.cycleDuration = cycleRecord.cycleInfo[0].duration
-    this.networkId = cycleRecord.cycleInfo[0].networkId
-    this.mode = cycleRecord.cycleInfo[0].mode
+    if (cycleRecord == null) return;
+    if (cycleRecord.cycleInfo == null) return;
+    if (cycleRecord.cycleInfo.length === 0) return;
+    Logger.mainLogger.info(
+      `Creating archiver cycle record with data: ${JSON.stringify(cycleRecord)}`
+    );
+    this.cycleRecordStart = cycleRecord.cycleInfo[0].start;
+    this.cycleRecordCounter = cycleRecord.cycleInfo[0].counter;
+    this.cycleDuration = cycleRecord.cycleInfo[0].duration;
+    this.networkId = cycleRecord.cycleInfo[0].networkId;
+    this.mode = cycleRecord.cycleInfo[0].mode;
     Logger.mainLogger.info(
       `Archiver cycle record created with start: 
       ${this.cycleRecordStart}, counter: ${this.cycleRecordCounter}, 
       duration: ${this.cycleDuration}, networkId: ${this.networkId}, 
       mode: ${cycleRecord.cycleInfo[0].mode}`
-    )
+    );
     if (cycleRecord.cycleInfo[0].mode === 'shutdown') {
-      Logger.mainLogger.info(`Archiver latest cycle record indicates shutdown mode.`)
-      clearInterval(this.queryArchiverInterval)
-      this.queryArchiverIntervalTime = 1000 * 60 // Check every minute
-      this.queryArchiverInterval = setInterval(this.queryArchiverRetries.bind(this), this.queryArchiverIntervalTime)
+      Logger.mainLogger.info(
+        `Archiver latest cycle record indicates shutdown mode.`
+      );
+      clearInterval(this.queryArchiverInterval);
+      this.queryArchiverIntervalTime = 1000 * 60; // Check every minute
+      this.queryArchiverInterval = setInterval(
+        this.queryArchiverRetries.bind(this),
+        this.queryArchiverIntervalTime
+      );
     } else if (this.queryArchiverIntervalTime === 1000 * 60) {
-      clearInterval(this.queryArchiverInterval)
+      clearInterval(this.queryArchiverInterval);
       // Set back to 20 minutes
-      this.queryArchiverIntervalTime = 20 * 60 * 1000 // Update cycleRecord every 20 minutes
-      this.queryArchiverInterval = setInterval(this.queryArchiverRetries.bind(this), this.queryArchiverIntervalTime)
+      this.queryArchiverIntervalTime = 20 * 60 * 1000; // Update cycleRecord every 20 minutes
+      this.queryArchiverInterval = setInterval(
+        this.queryArchiverRetries.bind(this),
+        this.queryArchiverIntervalTime
+      );
     }
   }
   calculateCycleRecordCounter() {
@@ -208,8 +241,9 @@ export class Node {
     const diffSeconds = now - this.cycleRecordStart;
     const diffCycles = Math.floor(diffSeconds / this.cycleDuration);
     const cycleRecordCounter = this.cycleRecordCounter + diffCycles;
-    const cycleRecordTimestamp = this.cycleRecordStart + (diffCycles * this.cycleDuration);
-    return {cycleRecordCounter, cycleRecordTimestamp}
+    const cycleRecordTimestamp =
+      this.cycleRecordStart + diffCycles * this.cycleDuration;
+    return {cycleRecordCounter, cycleRecordTimestamp};
   }
   checkStandbyNodes() {
     for (let pk in this.nodes.joining) {
@@ -240,24 +274,36 @@ export class Node {
     for (let nodeId in this.nodes.syncing) {
       const nodeIpInfo: NodeIpInfo = this.nodes.syncing[nodeId].nodeIpInfo;
       const url = `http://${nodeIpInfo.externalIp}:${nodeIpInfo.externalPort}/nodeinfo`;
-      axios.get(url).then(res => {
-        if (res.status !== 200) {
-          Logger.mainLogger.warn(`Syncing node ${nodeIpInfo.externalIp}:${nodeIpInfo.externalPort} is not online`)
-          delete this.nodes.syncing[nodeId];
-          this.syncAppData.delete(nodeId);
-        } else if (res.status === 200) {
-          const nodeInfo = res.data.nodeInfo;
-          if (nodeInfo == null || !['syncing', 'selected', 'ready'].includes(nodeInfo.status)) {
-            Logger.mainLogger.info(`Syncing node ${nodeIpInfo.externalIp}:${nodeIpInfo.externalPort} is no longer syncing`)
+      axios
+        .get(url)
+        .then(res => {
+          if (res.status !== 200) {
+            Logger.mainLogger.warn(
+              `Syncing node ${nodeIpInfo.externalIp}:${nodeIpInfo.externalPort} is not online`
+            );
             delete this.nodes.syncing[nodeId];
-            delete this.syncAppData[nodeId];
+            this.syncAppData.delete(nodeId);
+          } else if (res.status === 200) {
+            const nodeInfo = res.data.nodeInfo;
+            if (
+              nodeInfo == null ||
+              !['syncing', 'selected', 'ready'].includes(nodeInfo.status)
+            ) {
+              Logger.mainLogger.info(
+                `Syncing node ${nodeIpInfo.externalIp}:${nodeIpInfo.externalPort} is no longer syncing`
+              );
+              delete this.nodes.syncing[nodeId];
+              delete this.syncAppData[nodeId];
+            }
           }
-        }
-      }).catch(err => {
-        Logger.mainLogger.warn(`Syncing node ${nodeIpInfo.externalIp}:${nodeIpInfo.externalPort} is not online`)
-        delete this.nodes.syncing[nodeId];
-        delete this.syncAppData[nodeId];
-      })
+        })
+        .catch(err => {
+          Logger.mainLogger.warn(
+            `Syncing node ${nodeIpInfo.externalIp}:${nodeIpInfo.externalPort} is not online`
+          );
+          delete this.nodes.syncing[nodeId];
+          delete this.syncAppData[nodeId];
+        });
     }
   }
 
@@ -303,7 +349,7 @@ export class Node {
     }
   }
 
- joining(
+  joining(
     publicKey: string,
     nodeIpInfo: NodeIpInfo,
     appData: NodeInfoAppData
@@ -362,9 +408,9 @@ export class Node {
     }
   }
 
-
   getExistingActiveNode(nodeId: string, nodeIpInfo: NodeIpInfo): ActiveReport {
-    if (config.verboseLog) Logger.mainLogger.debug(
+    if (config.verboseLog)
+      Logger.mainLogger.debug(
         'Checking existing active node.',
         nodeId,
         nodeIpInfo
@@ -390,12 +436,14 @@ export class Node {
     } catch (e) {
       Logger.mainLogger.error('Error while checking active node', e);
     }
-    if (config.verboseLog) Logger.mainLogger.debug('No existing active node found.');
+    if (config.verboseLog)
+      Logger.mainLogger.debug('No existing active node found.');
     return;
   }
 
   getExistingSyncingNode(nodeId: string, nodeIpInfo: NodeIpInfo): SyncReport {
-    if (config.verboseLog) Logger.mainLogger.debug(
+    if (config.verboseLog)
+      Logger.mainLogger.debug(
         'Checking existing syncing node.',
         nodeId,
         nodeIpInfo
@@ -421,12 +469,14 @@ export class Node {
     } catch (e) {
       Logger.mainLogger.error('Error while chcking syncing node', e);
     }
-    if (config.verboseLog) Logger.mainLogger.debug('No existing syncing node found.');
+    if (config.verboseLog)
+      Logger.mainLogger.debug('No existing syncing node found.');
     return;
   }
 
   getExistingStandbyNode(publicKey: string, nodeIpInfo: NodeIpInfo): string {
-    if (config.verboseLog) Logger.mainLogger.debug(
+    if (config.verboseLog)
+      Logger.mainLogger.debug(
         'Checking existing standby node.',
         publicKey,
         nodeIpInfo
@@ -452,24 +502,35 @@ export class Node {
     } catch (e) {
       Logger.mainLogger.error('Error while checking standby node', e);
     }
-    if (config.verboseLog) Logger.mainLogger.debug('No existing standby node found.');
+    if (config.verboseLog)
+      Logger.mainLogger.debug('No existing standby node found.');
     return;
   }
 
-   joined(publicKey: string, nodeId: string, nodeIpInfo: NodeIpInfo, appData: NodeInfoAppData): void {
+  joined(
+    publicKey: string,
+    nodeId: string,
+    nodeIpInfo: NodeIpInfo,
+    appData: NodeInfoAppData
+  ): void {
     try {
       if (config.allowBogon === false) {
         if (isBogonIP(nodeIpInfo.externalIp)) {
-          this.bogonIpCount.joined++
-          if (config.verboseLog) Logger.mainLogger.info(`Received bogon ip at joined report. public key: ${publicKey}, nodeId: ${nodeId}, nodeIpInfo: ${JSON.stringify(nodeIpInfo)}`);
-          return
+          this.bogonIpCount.joined++;
+          if (config.verboseLog)
+            Logger.mainLogger.info(
+              `Received bogon ip at joined report. public key: ${publicKey}, nodeId: ${nodeId}, nodeIpInfo: ${JSON.stringify(nodeIpInfo)}`
+            );
+          return;
         }
       } else {
         //even if not checking bogon still reject other invalid IPs that would be unusable
         if (isInvalidIP(nodeIpInfo.externalIp)) {
-          this.invalidIpCount.joined++
-          Logger.mainLogger.info(`Received invalid ip at joined report. public key: ${publicKey}, nodeId: ${nodeId}, nodeIpInfo: ${JSON.stringify(nodeIpInfo)}`);
-          return
+          this.invalidIpCount.joined++;
+          Logger.mainLogger.info(
+            `Received invalid ip at joined report. public key: ${publicKey}, nodeId: ${nodeId}, nodeIpInfo: ${JSON.stringify(nodeIpInfo)}`
+          );
+          return;
         }
       }
       const existingSyncingNode = this.getExistingSyncingNode(
@@ -520,7 +581,7 @@ export class Node {
         nodeId,
       };
       this.checkCrashedBefore(this.history[nodeId].data);
-      if (this.nodes.joining[publicKey])  {
+      if (this.nodes.joining[publicKey]) {
         delete this.nodes.joining[publicKey];
         delete this.joiningAppData[publicKey];
       }
@@ -533,7 +594,8 @@ export class Node {
   }
 
   active(nodeId: string): void {
-    if (config.verboseLog) Logger.mainLogger.info(`Received active report for nodeId: ${nodeId}`)
+    if (config.verboseLog)
+      Logger.mainLogger.info(`Received active report for nodeId: ${nodeId}`);
 
     try {
       if (this.nodes.syncing[nodeId]) {
@@ -644,50 +706,73 @@ export class Node {
   }
 
   async heartbeat(nodeId: string, data: ActiveReport): Promise<void> {
-    if (config.verboseLog) Logger.mainLogger.info(`Running heartbeat for nodeId: ${nodeId}, data: ${JSON.stringify(data)}`)
-    if (this.networkId === 'none') { // Not yet received cycleRecord from Archiver. Not ready for heartbeat.
-      return
+    if (config.verboseLog)
+      Logger.mainLogger.info(
+        `Running heartbeat for nodeId: ${nodeId}, data: ${JSON.stringify(data)}`
+      );
+    if (this.networkId === 'none') {
+      // Not yet received cycleRecord from Archiver. Not ready for heartbeat.
+      return;
     }
 
     try {
       if (config.allowBogon === false) {
         if (isBogonIP(data.nodeIpInfo.externalIp)) {
-          this.bogonIpCount.heartbeat++
-          if (config.verboseLog) Logger.mainLogger.info(`Received bogon ip at heartbeat data. nodeId: ${nodeId}, nodeIpInfo: ${JSON.stringify(data.nodeIpInfo.externalIp)}`);
-          return
+          this.bogonIpCount.heartbeat++;
+          if (config.verboseLog)
+            Logger.mainLogger.info(
+              `Received bogon ip at heartbeat data. nodeId: ${nodeId}, nodeIpInfo: ${JSON.stringify(data.nodeIpInfo.externalIp)}`
+            );
+          return;
         }
       } else {
         //even if not checking bogon still reject other invalid IPs that would be unusable
         if (isInvalidIP(data.nodeIpInfo.externalIp)) {
-          this.invalidIpCount.heartbeat++
-          Logger.mainLogger.info(`Received invalid ip at heartbeat data. nodeId: ${nodeId}, nodeIpInfo: ${JSON.stringify(data.nodeIpInfo.externalIp)}`);
-          return
+          this.invalidIpCount.heartbeat++;
+          Logger.mainLogger.info(
+            `Received invalid ip at heartbeat data. nodeId: ${nodeId}, nodeIpInfo: ${JSON.stringify(data.nodeIpInfo.externalIp)}`
+          );
+          return;
         }
       }
-    } catch(e) {
-      Logger.mainLogger.error(
-        `Unable to check bogon or invalid ip`
-      );
+    } catch (e) {
+      Logger.mainLogger.error(`Unable to check bogon or invalid ip`);
     }
 
     // Check for valid heartbeat
     if (this.networkId !== data.networkId) {
-      Logger.ignoredLogger.info(`NETWORKID: node ${nodeId} with ${data.networkId} expected ${this.networkId}.`);
+      Logger.ignoredLogger.info(
+        `NETWORKID: node ${nodeId} with ${data.networkId} expected ${this.networkId}.`
+      );
       return;
     }
-    const {cycleRecordCounter, cycleRecordTimestamp} = this.calculateCycleRecordCounter();
-    if (!(data.cycleCounter && Math.abs(data.cycleCounter - cycleRecordCounter) < 3)) {
-      Logger.ignoredLogger.info(`CYCLECOUNTER: node ${nodeId} with ${data.cycleCounter} expected ${cycleRecordCounter}.`);
+    const {cycleRecordCounter, cycleRecordTimestamp} =
+      this.calculateCycleRecordCounter();
+    if (
+      !(
+        data.cycleCounter &&
+        Math.abs(data.cycleCounter - cycleRecordCounter) < 3
+      )
+    ) {
+      Logger.ignoredLogger.info(
+        `CYCLECOUNTER: node ${nodeId} with ${data.cycleCounter} expected ${cycleRecordCounter}.`
+      );
       return;
     }
-    if (!(data.timestamp && Math.abs(data.timestamp - cycleRecordTimestamp) < 60)) {
-      Logger.ignoredLogger.info(`TIMESTAMP: node ${nodeId} with ${data.timestamp} expected ${cycleRecordTimestamp}.`);
+    if (
+      !(data.timestamp && Math.abs(data.timestamp - cycleRecordTimestamp) < 60)
+    ) {
+      Logger.ignoredLogger.info(
+        `TIMESTAMP: node ${nodeId} with ${data.timestamp} expected ${cycleRecordTimestamp}.`
+      );
       return;
     }
-    this.cycleMarkerCount.note(nodeId, data.cycleMarker)
-    if(!this.cycleMarkerCount.verifyMarker(data.cycleMarker)) {
-      Logger.ignoredLogger.info(`CYCLEMARKER: node ${nodeId} with ${data.cycleMarker} expected ${this.cycleMarkerCount.getCorrectMarker()}.`);
-      this.removed(nodeId)
+    this.cycleMarkerCount.note(nodeId, data.cycleMarker);
+    if (!this.cycleMarkerCount.verifyMarker(data.cycleMarker)) {
+      Logger.ignoredLogger.info(
+        `CYCLEMARKER: node ${nodeId} with ${data.cycleMarker} expected ${this.cycleMarkerCount.getCorrectMarker()}.`
+      );
+      this.removed(nodeId);
       return;
     }
 
@@ -741,7 +826,10 @@ export class Node {
     this.totalProcessed += data.txProcessed;
 
     this.countedEvents = this.aggregateMonitorCountedEvents(
-      this.countedEvents, data.countedEvents, this.nodes.active[nodeId]);
+      this.countedEvents,
+      data.countedEvents,
+      this.nodes.active[nodeId]
+    );
 
     this.appData.set(nodeId, data.appData);
 
@@ -767,55 +855,69 @@ export class Node {
    * @param nodeId
    * @returns
    */
-  private aggregateMonitorCountedEvents(currentCountedEvents: MonitorCountedEventMap , countedEvents: CountedEvent[], node: ActiveReport): MonitorCountedEventMap {
-    const {nodeId, nodeIpInfo: {externalIp, externalPort}} = node;
+  private aggregateMonitorCountedEvents(
+    currentCountedEvents: MonitorCountedEventMap,
+    countedEvents: CountedEvent[],
+    node: ActiveReport
+  ): MonitorCountedEventMap {
+    const {
+      nodeId,
+      nodeIpInfo: {externalIp, externalPort},
+    } = node;
 
-    countedEvents.forEach(({eventCategory, eventName, eventCount, eventMessages}) => {
-      if (!currentCountedEvents.has(eventCategory)) {
-        currentCountedEvents.set(eventCategory, new Map());
-      }
+    countedEvents.forEach(
+      ({eventCategory, eventName, eventCount, eventMessages}) => {
+        if (!currentCountedEvents.has(eventCategory)) {
+          currentCountedEvents.set(eventCategory, new Map());
+        }
 
-      const eventCategoryMap = currentCountedEvents.get(eventCategory)
-      if (!eventCategoryMap.has(eventName)) {
-        eventCategoryMap.set(eventName, {
-          eventCategory: eventCategory,
-          eventName: eventName,
-          eventCount: 0,
-          instanceData: {},
-          eventMessages: {}
+        const eventCategoryMap = currentCountedEvents.get(eventCategory);
+        if (!eventCategoryMap.has(eventName)) {
+          eventCategoryMap.set(eventName, {
+            eventCategory: eventCategory,
+            eventName: eventName,
+            eventCount: 0,
+            instanceData: {},
+            eventMessages: {},
+          });
+        }
+
+        const currentMonitorCountedEvent = currentCountedEvents
+          .get(eventCategory)
+          .get(eventName);
+        currentMonitorCountedEvent.eventCount += eventCount;
+
+        if (currentMonitorCountedEvent.instanceData[nodeId] === undefined) {
+          currentMonitorCountedEvent.instanceData[nodeId] = {
+            eventCount: 0,
+            externalIp,
+            externalPort,
+          };
+        }
+        currentMonitorCountedEvent.instanceData[nodeId].eventCount +=
+          eventCount;
+
+        eventMessages.forEach(eventMessage => {
+          const messageCount =
+            currentMonitorCountedEvent.eventMessages[eventMessage] ?? 0;
+          currentMonitorCountedEvent.eventMessages[eventMessage] =
+            messageCount + 1;
         });
       }
-
-      const currentMonitorCountedEvent = currentCountedEvents.get(eventCategory).get(eventName);
-      currentMonitorCountedEvent.eventCount += eventCount;
-
-      if (currentMonitorCountedEvent.instanceData[nodeId] === undefined) {
-        currentMonitorCountedEvent.instanceData[nodeId] = {
-          eventCount: 0,
-          externalIp,
-          externalPort
-        }
-      }
-      currentMonitorCountedEvent.instanceData[nodeId].eventCount += eventCount;
-
-      eventMessages.forEach(eventMessage => {
-        const messageCount = currentMonitorCountedEvent.eventMessages[eventMessage] ?? 0;
-        currentMonitorCountedEvent.eventMessages[eventMessage] = messageCount + 1;
-      });
-    })
+    );
 
     return currentCountedEvents;
   }
 
   updateAvgAndMaxTps() {
-    if (config.verboseLog) Logger.mainLogger.info('Running updateAvgAndMaxTps')
+    if (config.verboseLog) Logger.mainLogger.info('Running updateAvgAndMaxTps');
     ProfilerModule.profilerInstance.profileSectionStart('updateAvgAndMaxTps');
     try {
       let diffRatio = 0;
       if (Object.keys(this.nodes.active).length === 0) return;
       const newAvgTps = Math.round(
         (this.totalProcessed - this.lastTotalProcessed) /
-        (this.reportInterval / 1000)
+          (this.reportInterval / 1000)
       );
       if (this.avgTps > 0) diffRatio = (newAvgTps - this.avgTps) / this.avgTps;
       if (diffRatio < 1.5 || diffRatio > 0.5) {
@@ -826,26 +928,26 @@ export class Node {
       this.avgTps = newAvgTps;
       this.lastTotalProcessed = this.totalProcessed;
       this.checkDeadOrAlive();
-      this.logSummaryToConsole()
-    } catch(e) {
+      this.logSummaryToConsole();
+    } catch (e) {
       Logger.mainLogger.error(`Error in updateAvgAndMaxTps: ${e.message}`);
-    }finally{
+    } finally {
       setTimeout(() => {
         this.updateAvgAndMaxTps();
       }, this.reportInterval);
       ProfilerModule.profilerInstance.profileSectionEnd('updateAvgAndMaxTps');
     }
-
   }
 
   logSummaryToConsole() {
     console.log('---------Node Summary---------------');
-    console.log(`Standby: ${Object.keys(this.nodes.joining).length}, syncing: ${Object.keys(this.nodes.syncing).length}, active: ${Object.keys(this.nodes.active).length}`);
+    console.log(
+      `Standby: ${Object.keys(this.nodes.joining).length}, syncing: ${Object.keys(this.nodes.syncing).length}, active: ${Object.keys(this.nodes.active).length}`
+    );
   }
 
   updateRejectedTps() {
-    try{
-
+    try {
       ProfilerModule.profilerInstance.profileSectionStart('updateRejectedTps');
       if (Object.keys(this.nodes.active).length === 0) {
         return;
@@ -858,7 +960,7 @@ export class Node {
       this.rejectedTps = rejectedTps;
 
       this.lastTotalTxRejected = this.totalTxRejected;
-    }finally{
+    } finally {
       setTimeout(() => {
         this.updateRejectedTps();
       }, this.reportInterval);
@@ -872,7 +974,8 @@ export class Node {
       if (this.nodes.active[nodeId].timestamp < Date.now() - this.crashTimout) {
         const data = this.nodes.active[nodeId];
         this.nodes.active[nodeId].crashed = true;
-        if (this.history[nodeId]) this.history[nodeId].crashed = this.nodes.active[nodeId].timestamp;
+        if (this.history[nodeId])
+          this.history[nodeId].crashed = this.nodes.active[nodeId].timestamp;
         if (!this.crashedNodes[nodeId]) {
           this.crashedNodes[nodeId] = data;
           Logger.historyLogger.info(
@@ -883,7 +986,7 @@ export class Node {
           Logger.historyLogger.info(
             `dead ${nodeId} ${data.nodeIpInfo.externalIp} ${data.nodeIpInfo.externalPort} ${this.counter} is removed from monitor`
           );
-          delete this.nodes.active[nodeId]
+          delete this.nodes.active[nodeId];
         }
       } else {
         this.nodes.active[nodeId].crashed = false;
@@ -952,9 +1055,9 @@ export class Node {
           .get(appData.shardeumVersion)
           .cliVersions.set(
             appData.operatorCLIVersion,
-            (aggregatedAppVersion
+            aggregatedAppVersion
               .get(appData.shardeumVersion)
-              .cliVersions.get(appData.operatorCLIVersion)) + 1
+              .cliVersions.get(appData.operatorCLIVersion) + 1
           );
 
         // Increment the GUI version count that this node is using
@@ -962,9 +1065,9 @@ export class Node {
           .get(appData.shardeumVersion)
           .guiVersions.set(
             appData.operatorGUIVersion,
-            (aggregatedAppVersion
+            aggregatedAppVersion
               .get(appData.shardeumVersion)
-              .guiVersions.get(appData.operatorGUIVersion)) + 1
+              .guiVersions.get(appData.operatorGUIVersion) + 1
           );
 
         // Increment the total node count for this version
@@ -995,16 +1098,18 @@ export class Node {
 
       if (aggregatedAppVersion.has(appData.shardeumVersion)) {
         // Increment the total node count for this version
-        aggregatedAppVersion.get(appData.shardeumVersion).joiningNodeCount = (aggregatedAppVersion.get(appData.shardeumVersion).joiningNodeCount || 0) + 1;
+        aggregatedAppVersion.get(appData.shardeumVersion).joiningNodeCount =
+          (aggregatedAppVersion.get(appData.shardeumVersion).joiningNodeCount ||
+            0) + 1;
 
         // Increment the CLI version count that this node is using
         aggregatedAppVersion
           .get(appData.shardeumVersion)
           .cliVersions.set(
             appData.operatorCLIVersion,
-            (aggregatedAppVersion
+            aggregatedAppVersion
               .get(appData.shardeumVersion)
-              .cliVersions.get(appData.operatorCLIVersion)) + 1
+              .cliVersions.get(appData.operatorCLIVersion) + 1
           );
 
         // Increment the GUI version count that this node is using
@@ -1012,11 +1117,10 @@ export class Node {
           .get(appData.shardeumVersion)
           .guiVersions.set(
             appData.operatorGUIVersion,
-            (aggregatedAppVersion
+            aggregatedAppVersion
               .get(appData.shardeumVersion)
-              .guiVersions.get(appData.operatorGUIVersion)) + 1
+              .guiVersions.get(appData.operatorGUIVersion) + 1
           );
-
       } else {
         aggregatedAppVersion.set(appData.shardeumVersion, {
           joiningNodeCount: 1,
@@ -1043,16 +1147,18 @@ export class Node {
 
       if (aggregatedAppVersion.has(appData.shardeumVersion)) {
         // Increment the total node count for this version
-        aggregatedAppVersion.get(appData.shardeumVersion).syncingNodeCount = (aggregatedAppVersion.get(appData.shardeumVersion).syncingNodeCount || 0) + 1;
+        aggregatedAppVersion.get(appData.shardeumVersion).syncingNodeCount =
+          (aggregatedAppVersion.get(appData.shardeumVersion).syncingNodeCount ||
+            0) + 1;
 
         // Increment the CLI version count that this node is using
         aggregatedAppVersion
           .get(appData.shardeumVersion)
           .cliVersions.set(
             appData.operatorCLIVersion,
-            (aggregatedAppVersion
+            aggregatedAppVersion
               .get(appData.shardeumVersion)
-              .cliVersions.get(appData.operatorCLIVersion)) + 1
+              .cliVersions.get(appData.operatorCLIVersion) + 1
           );
 
         // Increment the GUI version count that this node is using
@@ -1060,11 +1166,10 @@ export class Node {
           .get(appData.shardeumVersion)
           .guiVersions.set(
             appData.operatorGUIVersion,
-            (aggregatedAppVersion
+            aggregatedAppVersion
               .get(appData.shardeumVersion)
-              .guiVersions.get(appData.operatorGUIVersion)) + 1
+              .guiVersions.get(appData.operatorGUIVersion) + 1
           );
-
       } else {
         aggregatedAppVersion.set(appData.shardeumVersion, {
           syncingNodeCount: 1,
@@ -1082,7 +1187,7 @@ export class Node {
   }
 
   getInvalidIps() {
-    return {bogon: this.bogonIpCount, invalid: this.invalidIpCount}
+    return {bogon: this.bogonIpCount, invalid: this.invalidIpCount};
   }
 
   resetRareCounters() {
@@ -1165,11 +1270,11 @@ export class Node {
         updatedNodes[nodeId] = this.crashedNodes[nodeId];
       }
       const updatedNodeIds = Object.keys(updatedNodes);
-      for (const updatedNodeId in updatedNodeIds){
+      for (const updatedNodeId in updatedNodeIds) {
         updatedNodes[updatedNodeId] = {
           ...updatedNodes[updatedNodeId],
-          activeTimestamp: this.history[updatedNodeId].active
-        }
+          activeTimestamp: this.history[updatedNodeId].active,
+        };
       }
       return {
         nodes: {
@@ -1190,17 +1295,20 @@ export class Node {
       };
     } else {
       ProfilerModule.profilerInstance.profileSectionEnd('GET_report');
-      const updatedNodes = this.nodes.active
+      const updatedNodes = this.nodes.active;
       const updatedNodeIds = Object.keys(updatedNodes);
       for (let i = 0; i < updatedNodeIds.length; i++) {
         const updatedNodeId = updatedNodeIds[i];
-        const data = updatedNodes[updatedNodeId]
+        const data = updatedNodes[updatedNodeId];
         if (!data || !data.appData) continue;
-        const activeTimestamp = updatedNodeId in this.history ? this.history[updatedNodeId].active : undefined
+        const activeTimestamp =
+          updatedNodeId in this.history
+            ? this.history[updatedNodeId].active
+            : undefined;
         updatedNodes[updatedNodeId] = {
           ...data,
-          activeTimestamp
-        }
+          activeTimestamp,
+        };
       }
       return {
         nodes: {
@@ -1249,86 +1357,86 @@ export class Node {
     return Object.values(this.nodes.active);
   }
 
-  createNodeListBackup(filePath: string){
-    if(!config.backup.enabled) return
-    if(fs.existsSync(filePath)) {
+  createNodeListBackup(filePath: string) {
+    if (!config.backup.enabled) return;
+    if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
     // console.log("BackingUp:",JSON.stringify(this.nodes));
-    try{
+    try {
       fs.writeFileSync(filePath, JSON.stringify(this.nodes), 'utf8');
-    }catch(err: any){
+    } catch (err: any) {
       console.error("Couldn't backup node list due to error: ", err);
     }
   }
 
-  createNetworkStatBackup(filePath: string){
-    if(!config.backup.enabled) return
-    if(fs.existsSync(filePath)) {
+  createNetworkStatBackup(filePath: string) {
+    if (!config.backup.enabled) return;
+    if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
     }
 
     const backup: any = {};
 
-    backup.totalTxInjected= this.totalTxInjected
-    backup.totalTxRejected= this.totalTxRejected
-    backup.totalTxExpired = this.totalTxExpired
-    backup.totalProcessed = this.totalProcessed
-    backup.avgTps = this.avgTps
-    backup.maxTps = this.maxTps
-    backup.rejectedTps = this.rejectedTps
-    backup.lastTotalProcessed = this.lastTotalProcessed
-    backup.reportInterval = this.reportInterval
-    backup.crashTimout = this.crashTimout
-    backup.lostNodeIds = Object.fromEntries(this.lostNodeIds)
-    backup.syncStatements = this.syncStatements
-    backup.removedNodes = this.removedNodes
-    backup.crashedNodes = this.crashedNodes
-    backup.history = this.history
-    backup.counter = this.counter
-    backup.rareEventCounters = this.rareEventCounters
-    backup.txCoverageMap = this.txCoverageMap
-    backup.txCoverageCounter = this.txCoverageCounter
-    backup.countedEvents = Object.fromEntries(this.countedEvents)
-    backup.bogonIpCount = this.bogonIpCount
-    backup.invalidIpCount = this.invalidIpCount
-    backup.appData = Object.fromEntries(this.appData)
+    backup.totalTxInjected = this.totalTxInjected;
+    backup.totalTxRejected = this.totalTxRejected;
+    backup.totalTxExpired = this.totalTxExpired;
+    backup.totalProcessed = this.totalProcessed;
+    backup.avgTps = this.avgTps;
+    backup.maxTps = this.maxTps;
+    backup.rejectedTps = this.rejectedTps;
+    backup.lastTotalProcessed = this.lastTotalProcessed;
+    backup.reportInterval = this.reportInterval;
+    backup.crashTimout = this.crashTimout;
+    backup.lostNodeIds = Object.fromEntries(this.lostNodeIds);
+    backup.syncStatements = this.syncStatements;
+    backup.removedNodes = this.removedNodes;
+    backup.crashedNodes = this.crashedNodes;
+    backup.history = this.history;
+    backup.counter = this.counter;
+    backup.rareEventCounters = this.rareEventCounters;
+    backup.txCoverageMap = this.txCoverageMap;
+    backup.txCoverageCounter = this.txCoverageCounter;
+    backup.countedEvents = Object.fromEntries(this.countedEvents);
+    backup.bogonIpCount = this.bogonIpCount;
+    backup.invalidIpCount = this.invalidIpCount;
+    backup.appData = Object.fromEntries(this.appData);
     // console.log("BackingUp:",JSON.stringify(this.nodes));
-    try{
+    try {
       fs.writeFileSync(filePath, JSON.stringify(backup), 'utf8');
-    }catch(err: any){
+    } catch (err: any) {
       console.error("Couldn't backup node list due to error: ", err);
     }
   }
 
-  setNodeList(nodes: NodeList){
-    this.nodes = nodes
+  setNodeList(nodes: NodeList) {
+    this.nodes = nodes;
   }
 
-  setNetworkStat(stats: any){
-    this.totalTxInjected = stats.totalTxInjected
-    this.totalTxRejected = stats.totalTxRejected
-    this.totalTxExpired = stats.totalTxExpired
-    this.totalProcessed = stats.totalProcessed
-    this.avgTps = stats.avgTps
-    this.maxTps = stats.maxTps
-    this.rejectedTps = stats.rejectedTps
-    this.lastTotalProcessed = stats.lastTotalProcessed
-    this.reportInterval = stats.reportInterval
-    this.crashTimout = stats.crashTimout
-    this.lostNodeIds = new Map(Object.entries(stats.lostNodeIds))
-    this.syncStatements = stats.syncStatements
-    this.removedNodes = stats.removedNodes
-    this.crashedNodes = stats.crashedNodes
-    this.history = stats.history
-    this.counter = stats.counter
-    this.rareEventCounters = stats.rareEventCounters
-    this.txCoverageMap = stats.txCoverageMap
-    this.txCoverageCounter = stats.txCoverageCounter
-    this.countedEvents = new Map(Object.entries(stats.countedEvents))
-    this.bogonIpCount = stats.bogonIpCount
-    this.invalidIpCount = stats.invalidIpCount
-    this.appData = new Map(Object.entries(stats.appData))
+  setNetworkStat(stats: any) {
+    this.totalTxInjected = stats.totalTxInjected;
+    this.totalTxRejected = stats.totalTxRejected;
+    this.totalTxExpired = stats.totalTxExpired;
+    this.totalProcessed = stats.totalProcessed;
+    this.avgTps = stats.avgTps;
+    this.maxTps = stats.maxTps;
+    this.rejectedTps = stats.rejectedTps;
+    this.lastTotalProcessed = stats.lastTotalProcessed;
+    this.reportInterval = stats.reportInterval;
+    this.crashTimout = stats.crashTimout;
+    this.lostNodeIds = new Map(Object.entries(stats.lostNodeIds));
+    this.syncStatements = stats.syncStatements;
+    this.removedNodes = stats.removedNodes;
+    this.crashedNodes = stats.crashedNodes;
+    this.history = stats.history;
+    this.counter = stats.counter;
+    this.rareEventCounters = stats.rareEventCounters;
+    this.txCoverageMap = stats.txCoverageMap;
+    this.txCoverageCounter = stats.txCoverageCounter;
+    this.countedEvents = new Map(Object.entries(stats.countedEvents));
+    this.bogonIpCount = stats.bogonIpCount;
+    this.invalidIpCount = stats.invalidIpCount;
+    this.appData = new Map(Object.entries(stats.appData));
   }
 
   flush() {

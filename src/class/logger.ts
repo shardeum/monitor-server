@@ -1,6 +1,6 @@
-import * as log4js from "log4js";
-import { existsSync, mkdirSync } from "fs";
-const log4jsExtend = require("log4js-extend");
+import * as log4js from 'log4js';
+import {existsSync, mkdirSync} from 'fs';
+const log4jsExtend = require('log4js-extend');
 
 interface Logger {
   baseDir: string;
@@ -65,7 +65,7 @@ class Logger {
   constructor(baseDir: string, config: LogsConfiguration) {
     this.baseDir = baseDir;
     this.config = config;
-    this.logDir = "";
+    this.logDir = '';
     this.log4Conf = null;
     this._setupLogs();
   }
@@ -73,9 +73,9 @@ class Logger {
   // Checks if the configuration has the required components
   _checkValidConfig() {
     const config = this.config;
-    if (!config.dir) throw Error("Fatal Error: Log directory not defined.");
-    if (!config.files || typeof config.files !== "object")
-      throw Error("Fatal Error: Valid log file locations not provided.");
+    if (!config.dir) throw Error('Fatal Error: Log directory not defined.');
+    if (!config.files || typeof config.files !== 'object')
+      throw Error('Fatal Error: Valid log file locations not provided.');
   }
 
   // Add filenames to each appender of type 'file'
@@ -83,7 +83,7 @@ class Logger {
     const conf = this.log4Conf;
     for (const key in conf.appenders) {
       const appender = conf.appenders[key];
-      if (appender.type !== "file") continue;
+      if (appender.type !== 'file') continue;
       appender.filename = `${this.logDir}/${key}.log`;
     }
   }
@@ -102,14 +102,14 @@ class Logger {
     const baseDir = this.baseDir;
     const config = this.config;
 
-    if (!baseDir) throw Error("Fatal Error: Base directory not defined.");
-    if (!config) throw Error("Fatal Error: No configuration provided.");
+    if (!baseDir) throw Error('Fatal Error: Base directory not defined.');
+    if (!config) throw Error('Fatal Error: No configuration provided.');
     this._checkValidConfig();
 
     // Makes specified directory if it doesn't exist
     if (config.dir) {
-      let allArchiversLogDir = `${baseDir}/${config.dir.split("/")[0]}`;
-      this.getLogger("main").info("allArchiversLogDir", allArchiversLogDir);
+      let allArchiversLogDir = `${baseDir}/${config.dir.split('/')[0]}`;
+      this.getLogger('main').info('allArchiversLogDir', allArchiversLogDir);
       if (!existsSync(allArchiversLogDir)) mkdirSync(allArchiversLogDir);
     }
 
@@ -120,14 +120,14 @@ class Logger {
     log4jsExtend(log4js);
     this._addFileNamesToAppenders();
     this._configureLogs();
-    this.getLogger("main").info("Logger initialized.");
+    this.getLogger('main').info('Logger initialized.');
   }
 
   // Tells this module that the server is shutting down, returns a Promise that resolves when all logs have been written to file, sockets are closed, etc.
   shutdown() {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       log4js.shutdown(() => {
-        resolve("done");
+        resolve('done');
       });
     });
   }
@@ -140,12 +140,12 @@ export let ignoredLogger: any;
 
 export function initLogger(baseDir: string, logsConfig: LogsConfiguration) {
   let logger = new Logger(baseDir, logsConfig);
-    console.log("logger", logger)
+  console.log('logger', logger);
 
-  mainLogger = logger.getLogger("main");
-  historyLogger = logger.getLogger("history");
-  errorLogger = logger.getLogger("errorFile");
-  ignoredLogger = logger.getLogger("ignored");
+  mainLogger = logger.getLogger('main');
+  historyLogger = logger.getLogger('history');
+  errorLogger = logger.getLogger('errorFile');
+  ignoredLogger = logger.getLogger('ignored');
 }
 
 export default Logger;

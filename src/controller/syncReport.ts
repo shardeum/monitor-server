@@ -1,7 +1,7 @@
-import { NextFunction, Response } from "express";
-import { Node } from "../class/node";
-import { RequestWithBody } from "../interface/interface";
-const validateReport = require("../middleware/validateReport");
+import {NextFunction, Response} from 'express';
+import {Node} from '../class/node';
+import {RequestWithBody} from '../interface/interface';
+const validateReport = require('../middleware/validateReport');
 
 const syncReport = (
   req: RequestWithBody,

@@ -1,9 +1,4 @@
-import {
-  binarySearch,
-  insertSorted,
-  computeMedian,
-  isIPv6,
-} from '../index';
+import {binarySearch, insertSorted, computeMedian, isIPv6} from '../index';
 
 describe('Utility Functions', () => {
   describe('binarySearch', () => {
@@ -22,11 +17,12 @@ describe('Utility Functions', () => {
     });
 
     it('should work with custom comparator', () => {
-      const arr = [{ id: 1 }, { id: 3 }, { id: 5 }, { id: 7 }, { id: 9 }];
-      const comparator = (a: { id: number }, b: { id: number }): number => a.id - b.id;
-      
-      expect(binarySearch(arr, { id: 5 }, comparator)).toBe(2);
-      expect(binarySearch(arr, { id: 4 }, comparator)).toBeLessThan(0);
+      const arr = [{id: 1}, {id: 3}, {id: 5}, {id: 7}, {id: 9}];
+      const comparator = (a: {id: number}, b: {id: number}): number =>
+        a.id - b.id;
+
+      expect(binarySearch(arr, {id: 5}, comparator)).toBe(2);
+      expect(binarySearch(arr, {id: 4}, comparator)).toBeLessThan(0);
     });
   });
 
@@ -50,11 +46,12 @@ describe('Utility Functions', () => {
     });
 
     it('should work with custom comparator', () => {
-      const arr = [{ id: 1 }, { id: 3 }, { id: 7 }, { id: 9 }];
-      const comparator = (a: { id: number }, b: { id: number }): number => a.id - b.id;
-      
-      insertSorted(arr, { id: 5 }, comparator);
-      expect(arr).toEqual([{ id: 1 }, { id: 3 }, { id: 5 }, { id: 7 }, { id: 9 }]);
+      const arr = [{id: 1}, {id: 3}, {id: 7}, {id: 9}];
+      const comparator = (a: {id: number}, b: {id: number}): number =>
+        a.id - b.id;
+
+      insertSorted(arr, {id: 5}, comparator);
+      expect(arr).toEqual([{id: 1}, {id: 3}, {id: 5}, {id: 7}, {id: 9}]);
     });
   });
 
@@ -101,9 +98,11 @@ describe('Utility Functions', () => {
 
     it('should return false for invalid IPv6 addresses', () => {
       expect(isIPv6('2001:0db8:85a3:0000:0000:8a2e:0370')).toBe(false); // Missing segment
-      expect(isIPv6('2001:0db8:85a3:0000:0000:8a2e:0370:7334:1234')).toBe(false); // Too many segments
+      expect(isIPv6('2001:0db8:85a3:0000:0000:8a2e:0370:7334:1234')).toBe(
+        false
+      ); // Too many segments
       expect(isIPv6('2001:0db8:85a3:0000:0000:8a2e:0370:gggg')).toBe(false); // Invalid hex
       expect(isIPv6('192.168.1.1')).toBe(false); // IPv4
     });
   });
-}); 
+});

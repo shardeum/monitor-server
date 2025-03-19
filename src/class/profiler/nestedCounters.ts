@@ -1,6 +1,6 @@
 const NS_PER_SEC = 1e9;
 
-const { stringifyReduce } = require("./StringifyReduce");
+const {stringifyReduce} = require('./StringifyReduce');
 // const core = require('shardus-crypto-utils')
 
 // process.hrtime.bigint()
@@ -23,7 +23,7 @@ class NestedCounters {
   server: any;
 
   constructor(server) {
-    console.log("Initialising Nested Counter");
+    console.log('Initialising Nested Counter');
     this.eventCounters = new Map();
     this.rareEventCounters = new Map();
     nestedCountersInstance = this;
@@ -32,14 +32,14 @@ class NestedCounters {
   }
 
   registerEndpoints() {
-    this.server.get("/counts", (req, res) => {
-      let outputStr = "";
+    this.server.get('/counts', (req, res) => {
+      let outputStr = '';
       let arrayReport = this.arrayitizeAndSort(this.eventCounters);
       outputStr += `${Date.now()}\n`;
       outputStr = this.printArrayReport(arrayReport, outputStr, 0);
       res.send(outputStr);
     });
-    this.server.get("/counts-reset", (req, res) => {
+    this.server.get('/counts-reset', (req, res) => {
       this.eventCounters = new Map();
       res.send(`counts reset ${Date.now()}`);
     });
@@ -57,9 +57,9 @@ class NestedCounters {
     //     }
     // })
 
-    this.server.get("/debug-inf-loop-off", (req, res) => {
+    this.server.get('/debug-inf-loop-off', (req, res) => {
       this.infLoopDebug = false;
-      res.send("stopping inf loop, who knows if this is possible");
+      res.send('stopping inf loop, who knows if this is possible');
     });
   }
 
@@ -68,7 +68,7 @@ class NestedCounters {
 
     let nextNode;
     if (counterMap.has(category1) === false) {
-      nextNode = { count: 0, subCounters: new Map() };
+      nextNode = {count: 0, subCounters: new Map()};
       counterMap.set(category1, nextNode);
     } else {
       nextNode = counterMap.get(category1);
@@ -79,7 +79,7 @@ class NestedCounters {
     //unrolled loop to avoid memory alloc
     category1 = category2;
     if (counterMap.has(category1) === false) {
-      nextNode = { count: 0, subCounters: new Map() };
+      nextNode = {count: 0, subCounters: new Map()};
       counterMap.set(category1, nextNode);
     } else {
       nextNode = counterMap.get(category1);
@@ -95,9 +95,9 @@ class NestedCounters {
     // start counting rare event
     let counterMap = this.rareEventCounters;
 
-    let nextNode = { count: 0, subCounters: new Map() };
+    let nextNode = {count: 0, subCounters: new Map()};
     if (!counterMap.has(category1)) {
-      nextNode = { count: 0, subCounters: new Map() };
+      nextNode = {count: 0, subCounters: new Map()};
       counterMap.set(category1, nextNode);
     } else {
       nextNode = counterMap.get(category1);
@@ -108,7 +108,7 @@ class NestedCounters {
     //unrolled loop to avoid memory alloc
     category1 = category2;
     if (counterMap.has(category1) === false) {
-      nextNode = { count: 0, subCounters: new Map() };
+      nextNode = {count: 0, subCounters: new Map()};
       counterMap.set(category1, nextNode);
     } else {
       nextNode = counterMap.get(category1);
@@ -122,7 +122,7 @@ class NestedCounters {
     for (let key of counterMap.keys()) {
       let valueObj = counterMap.get(key);
 
-      let newValueObj = { key, count: valueObj.count, subArray: null };
+      let newValueObj = {key, count: valueObj.count, subArray: null};
       // newValueObj.key = key
       array.push(newValueObj);
 
@@ -145,9 +145,9 @@ class NestedCounters {
   }
 
   printArrayReport(arrayReport, outputStr, indent: number = 0) {
-    let indentText = "___".repeat(indent);
+    let indentText = '___'.repeat(indent);
     for (let item of arrayReport) {
-      let { key, count, subArray, avgLen, logLen } = item;
+      let {key, count, subArray, avgLen, logLen} = item;
       let countStr = `${count}`;
       outputStr += `${countStr.padStart(10)} ${indentText} ${key}\n`;
       if (subArray != null && subArray.length > 0) {

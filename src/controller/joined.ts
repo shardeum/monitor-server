@@ -1,7 +1,11 @@
-import { NextFunction, Response } from "express";
-import { Node } from "../class/node";
-import { NodeIpInfo, RequestWithBody, NodeInfoAppData } from "../interface/interface";
-const Logger = require("../class/logger");
+import {NextFunction, Response} from 'express';
+import {Node} from '../class/node';
+import {
+  NodeIpInfo,
+  RequestWithBody,
+  NodeInfoAppData,
+} from '../interface/interface';
+const Logger = require('../class/logger');
 
 const joined = (req: RequestWithBody, res: Response, next: NextFunction) => {
   try {
@@ -16,7 +20,7 @@ const joined = (req: RequestWithBody, res: Response, next: NextFunction) => {
     };
     res.status(200).send(resp);
   } catch (e) {
-    Logger.mainLogger.error(e)
+    Logger.mainLogger.error(e);
   }
 };
 

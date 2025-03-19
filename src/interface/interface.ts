@@ -131,7 +131,10 @@ export type CountedEvent = {
 };
 
 // Map<eventCategory, Map<eventName, MonitorCountedEvent>>
-export type MonitorCountedEventMap = Map<string, Map<string, MonitorCountedEvent>>
+export type MonitorCountedEventMap = Map<
+  string,
+  Map<string, MonitorCountedEvent>
+>;
 
 export type MonitorCountedEvent = {
   eventCategory: string;
@@ -142,14 +145,14 @@ export type MonitorCountedEvent = {
   };
   eventMessages: {
     [eventMessage: string]: number | undefined;
-  }
-}
+  };
+};
 
 type MonitorEventCountedInstanceData = {
   externalIp: string;
   externalPort: number;
   eventCount: number;
-}
+};
 
 export type NodeInfoAppData = {
   shardeumVersion: string;
