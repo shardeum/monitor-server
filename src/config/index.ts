@@ -1,5 +1,5 @@
-import {join} from 'path';
-require('dotenv').config();
+import { join } from 'path'
+require('dotenv').config()
 let config = {
   env: process.env.NODE_ENV?.toLowerCase() || 'release', // "debug"
   host: process.env.HOST || '127.0.0.1',
@@ -21,10 +21,10 @@ let config = {
     networkStat_path: join(__dirname, '../../', 'cold_networkStat.json'),
   },
   verboseLog: false,
-};
+}
 
 // should NOT log the secret or password
-const {secret, password, ...safeConfig} = config;
-console.log('monitor config', safeConfig);
+const { secret, password, ...safeConfig } = config
+console.log('monitor config', safeConfig)
 
-export default config;
+export default config

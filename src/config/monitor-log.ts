@@ -1,10 +1,10 @@
 export default {
   saveConsoleOutput: true,
   dir: 'monitor-logs',
-  files: {main: '', history: '', errorFile: '', ignored: ''},
+  files: { main: '', history: '', errorFile: '', ignored: '' },
   options: {
     appenders: {
-      out: {type: 'console'},
+      out: { type: 'console' },
       main: {
         type: 'file',
         maxLogSize: 10000000,
@@ -32,10 +32,10 @@ export default {
       },
     },
     categories: {
-      default: {appenders: ['out'], level: 'trace'},
-      main: {appenders: ['main', 'errors'], level: 'trace'},
-      history: {appenders: ['history'], level: 'trace'},
-      ignored: {appenders: ['ignored'], level: 'trace'},
+      default: { appenders: ['out'], level: 'trace' },
+      main: { appenders: ['main', 'errors'], level: 'trace' },
+      history: { appenders: ['history'], level: 'trace' },
+      ignored: { appenders: ['ignored'], level: 'trace' },
     },
   },
-};
+}

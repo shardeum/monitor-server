@@ -9,11 +9,7 @@ module.exports = {
   },
   collectCoverage: true,
   coverageDirectory: 'coverage',
-  collectCoverageFrom: [
-    'src/**/*.ts',
-    '!src/**/*.d.ts',
-    '!src/**/__tests__/**',
-  ],
+  collectCoverageFrom: ['src/**/*.ts', '!src/**/*.d.ts', '!src/**/__tests__/**'],
   coverageReporters: ['json-summary', 'text', 'lcov'],
   coverageThreshold: {
     global: {
@@ -23,4 +19,4 @@ module.exports = {
       statements: 2.27,
     },
   },
-};
+}

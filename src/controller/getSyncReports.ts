@@ -1,16 +1,12 @@
-import {NextFunction, Response} from 'express';
-import {Node} from '../class/node';
-import {RequestWithBody} from '../interface/interface';
+import { NextFunction, Response } from 'express'
+import { Node } from '../class/node'
+import { RequestWithBody } from '../interface/interface'
 
-const getSyncReports = (
-  req: RequestWithBody,
-  res: Response,
-  next: NextFunction
-) => {
-  const nodeId: string | undefined = req.body.nodeId;
-  let Node: Node = global.node;
-  let data = Node.getSyncReports();
-  res.status(200).send(data);
-};
+const getSyncReports = (req: RequestWithBody, res: Response, next: NextFunction) => {
+  const nodeId: string | undefined = req.body.nodeId
+  let Node: Node = global.node
+  let data = Node.getSyncReports()
+  res.status(200).send(data)
+}
 
-module.exports = getSyncReports;
+module.exports = getSyncReports

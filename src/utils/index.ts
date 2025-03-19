@@ -1,11 +1,11 @@
-type Comparator<T, E = T> = (a: E, b: T) => number;
+type Comparator<T, E = T> = (a: E, b: T) => number
 
 export function insertSorted<T>(arr: T[], item: T, comparator?: Comparator<T>) {
-  let i = binarySearch(arr, item, comparator);
+  let i = binarySearch(arr, item, comparator)
   if (i < 0) {
-    i = -1 - i;
+    i = -1 - i
   }
-  arr.splice(i, 0, item);
+  arr.splice(i, 0, item)
 }
 
 /**
@@ -27,73 +27,65 @@ export function insertSorted<T>(arr: T[], item: T, comparator?: Comparator<T>) {
  * @param el
  * @param comparator
  */
-export function binarySearch<T, E = Partial<T>>(
-  arr: T[],
-  el: E,
-  comparator?: Comparator<T, typeof el>
-) {
+export function binarySearch<T, E = Partial<T>>(arr: T[], el: E, comparator?: Comparator<T, typeof el>) {
   if (comparator == null) {
     // Emulate the default Array.sort() comparator
     comparator = (a, b) => {
-      return a.toString() > b.toString()
-        ? 1
-        : a.toString() < b.toString()
-          ? -1
-          : 0;
-    };
-  }
-  let m = 0;
-  let n = arr.length - 1;
-  while (m <= n) {
-    const k = (n + m) >> 1;
-    const cmp = comparator(el, arr[k]);
-    if (cmp > 0) {
-      m = k + 1;
-    } else if (cmp < 0) {
-      n = k - 1;
-    } else {
-      return k;
+      return a.toString() > b.toString() ? 1 : a.toString() < b.toString() ? -1 : 0
     }
   }
-  return -m - 1;
+  let m = 0
+  let n = arr.length - 1
+  while (m <= n) {
+    const k = (n + m) >> 1
+    const cmp = comparator(el, arr[k])
+    if (cmp > 0) {
+      m = k + 1
+    } else if (cmp < 0) {
+      n = k - 1
+    } else {
+      return k
+    }
+  }
+  return -m - 1
 }
 
 export const computeMedian = (arr = [], sort = true) => {
   if (sort) {
-    arr.sort((a, b) => a - b);
+    arr.sort((a, b) => a - b)
   }
-  const len = arr.length;
+  const len = arr.length
   switch (len) {
     case 0: {
-      return 0;
+      return 0
     }
     case 1: {
-      return arr[0];
+      return arr[0]
     }
     default: {
-      const mid = len / 2;
+      const mid = len / 2
       if (len % 2 === 0) {
-        return arr[mid];
+        return arr[mid]
       } else {
-        return (arr[Math.floor(mid)] + arr[Math.ceil(mid)]) / 2;
+        return (arr[Math.floor(mid)] + arr[Math.ceil(mid)]) / 2
       }
     }
   }
-};
+}
 
 export function isIPv6(ip: string) {
-  const slicedArr = ip.split(':');
-  if (slicedArr.length !== 8) return false;
+  const slicedArr = ip.split(':')
+  if (slicedArr.length !== 8) return false
 
   //TODO potentially replace regex with something faster (needs testing)
   for (const str of slicedArr) {
     // Check if string is a valid regex
-    const hexRegex = /^[0-9A-Fa-f]+$/;
-    if (str.length < 0 || str.length > 4) return false;
-    if (str.match(hexRegex) == null) return false;
+    const hexRegex = /^[0-9A-Fa-f]+$/
+    if (str.length < 0 || str.length > 4) return false
+    if (str.match(hexRegex) == null) return false
   }
 
-  return true;
+  return true
 }
 
 /**
@@ -103,14 +95,14 @@ export function isIPv6(ip: string) {
  * @returns
  */
 export function isBogonIP(ip) {
-  let ipArr;
+  let ipArr
   try {
-    ipArr = getIpArr(ip);
+    ipArr = getIpArr(ip)
   } catch (e) {
-    console.log(ip, e);
-    return true;
+    console.log(ip, e)
+    return true
   }
-  return isPrivateIP(ipArr) || isReservedIP(ipArr);
+  return isPrivateIP(ipArr) || isReservedIP(ipArr)
 }
 
 /**
@@ -120,39 +112,34 @@ export function isBogonIP(ip) {
  * @returns
  */
 export function isInvalidIP(ip) {
-  let ipArr;
+  let ipArr
   try {
-    ipArr = getIpArr(ip);
+    ipArr = getIpArr(ip)
   } catch (e) {
-    console.log(ip, e);
-    return true;
+    console.log(ip, e)
+    return true
   }
-  return isReservedIP(ipArr);
+  return isReservedIP(ipArr)
 }
 
 function getIpArr(ip: string) {
-  const slicedArr = ip.split('.');
+  const slicedArr = ip.split('.')
   if (slicedArr.length !== 4) {
-    throw new Error('Invalid IP address provided');
+    throw new Error('Invalid IP address provided')
   }
 
   for (const number of slicedArr) {
-    const num = Number(number);
+    const num = Number(number)
     if (num.toString() !== number) {
-      throw new Error('Leading zero detected. Invalid IP address');
+      throw new Error('Leading zero detected. Invalid IP address')
     }
     if (num < 0 || num > 255) {
-      throw new Error('Invalid IP address provided');
+      throw new Error('Invalid IP address provided')
     }
   }
   // Change to numbers Array
-  const numArray = [
-    Number(slicedArr[0]),
-    Number(slicedArr[1]),
-    Number(slicedArr[2]),
-    Number(slicedArr[3]),
-  ];
-  return numArray;
+  const numArray = [Number(slicedArr[0]), Number(slicedArr[1]), Number(slicedArr[2]), Number(slicedArr[3])]
+  return numArray
 }
 
 function isPrivateIP(ip) {
@@ -169,7 +156,7 @@ function isPrivateIP(ip) {
     (ip[0] === 172 && ip[1] >= 16 && ip[1] <= 31) ||
     // 192.168.0.0/16  Private-use networks
     (ip[0] === 192 && ip[1] === 168)
-  );
+  )
 }
 
 function isReservedIP(ip) {
@@ -192,114 +179,112 @@ function isReservedIP(ip) {
     ip[0] >= 240 ||
     // 255.255.255.255/32
     (ip[0] === 255 && ip[1] === 255 && ip[2] === 255 && ip[3] === 255)
-  );
+  )
 }
 
-export function mapToObjectRecursive(
-  map: Map<string, any> | {[key: string]: any}
-): {[key: string]: any} {
-  const obj: {[key: string]: any} = {};
+export function mapToObjectRecursive(map: Map<string, any> | { [key: string]: any }): { [key: string]: any } {
+  const obj: { [key: string]: any } = {}
   if (map instanceof Map) {
     for (const [key, value] of map.entries()) {
       if (value instanceof Map || typeof value === 'object') {
-        obj[key] = mapToObjectRecursive(value);
+        obj[key] = mapToObjectRecursive(value)
       } else {
-        obj[key] = value;
+        obj[key] = value
       }
     }
   } else if (Array.isArray(map)) {
-    return map;
+    return map
   } else {
     for (const [key, value] of Object.entries(map)) {
       if (value instanceof Map || typeof value === 'object') {
-        obj[key] = mapToObjectRecursive(value);
+        obj[key] = mapToObjectRecursive(value)
       } else {
-        obj[key] = value;
+        obj[key] = value
       }
     }
   }
-  return obj;
+  return obj
 }
 
 // A class used for tracking cycleMarkers being reported by nodes
 export class MarkerCount {
-  private nodeMap: Map<string, string>;
-  private markerCount: Map<string, number>;
-  private heap: [string, number][];
-  private possibleNewMarker: string;
+  private nodeMap: Map<string, string>
+  private markerCount: Map<string, number>
+  private heap: [string, number][]
+  private possibleNewMarker: string
 
   constructor() {
-    this.nodeMap = new Map();
-    this.markerCount = new Map();
-    this.heap = [];
-    this.possibleNewMarker = null;
+    this.nodeMap = new Map()
+    this.markerCount = new Map()
+    this.heap = []
+    this.possibleNewMarker = null
   }
 
   note(nodeId: string, marker: string) {
     if (!this.nodeMap.has(nodeId)) {
-      this.nodeMap.set(nodeId, marker);
-      this.increment(marker);
+      this.nodeMap.set(nodeId, marker)
+      this.increment(marker)
     } else {
-      const oldMarker = this.nodeMap.get(nodeId);
+      const oldMarker = this.nodeMap.get(nodeId)
       if (oldMarker !== marker) {
-        this.updateNodeMarker(oldMarker, marker);
-        this.nodeMap.set(nodeId, marker);
+        this.updateNodeMarker(oldMarker, marker)
+        this.nodeMap.set(nodeId, marker)
       }
     }
   }
 
   increment(marker: string) {
-    this.markerCount.set(marker, (this.markerCount.get(marker) || 0) + 1);
-    this.heapify();
+    this.markerCount.set(marker, (this.markerCount.get(marker) || 0) + 1)
+    this.heapify()
   }
 
   updateNodeMarker(oldMarker: string, newMarker: string) {
     if (oldMarker === this.heap[0][0]) {
-      this.possibleNewMarker = newMarker;
+      this.possibleNewMarker = newMarker
     }
-    this.markerCount.set(oldMarker, this.markerCount.get(oldMarker) - 1);
+    this.markerCount.set(oldMarker, this.markerCount.get(oldMarker) - 1)
     if (this.markerCount.get(oldMarker) === 0) {
-      this.markerCount.delete(oldMarker);
+      this.markerCount.delete(oldMarker)
     }
-    this.increment(newMarker);
+    this.increment(newMarker)
   }
 
   verifyMarker(marker: string): boolean {
     if (marker === this.heap[0][0]) {
-      return true;
+      return true
     }
     if (marker === this.possibleNewMarker) {
-      return true;
+      return true
     }
-    return false;
+    return false
   }
 
   getCorrectMarker(): string {
-    return this.heap[0][0];
+    return this.heap[0][0]
   }
 
   heapify() {
-    this.heap = Array.from(this.markerCount.entries());
-    this.heap.sort((a, b) => b[1] - a[1]);
+    this.heap = Array.from(this.markerCount.entries())
+    this.heap.sort((a, b) => b[1] - a[1])
   }
 }
 export function compareIPs(ip1, ip2, type = 'asc') {
   // Split the IP strings into arrays of octets
-  const octets1 = ip1.split('.');
-  const octets2 = ip2.split('.');
+  const octets1 = ip1.split('.')
+  const octets2 = ip2.split('.')
 
   // Compare each octet successively
   for (let i = 0; i < 4; i++) {
-    const octet1 = parseInt(octets1[i], 10);
-    const octet2 = parseInt(octets2[i], 10);
+    const octet1 = parseInt(octets1[i], 10)
+    const octet2 = parseInt(octets2[i], 10)
 
     if (octet1 < octet2) {
-      return type === 'asc' ? -1 : 1;
+      return type === 'asc' ? -1 : 1
     } else if (octet1 > octet2) {
-      return type === 'asc' ? 1 : -1;
+      return type === 'asc' ? 1 : -1
     }
   }
 
   // If all octets are equal, return 0
-  return 0;
+  return 0
 }
