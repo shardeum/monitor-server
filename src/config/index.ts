@@ -1,9 +1,9 @@
-import { join } from 'path';
-require("dotenv").config();
+import { join } from 'path'
+require('dotenv').config()
 let config = {
-  env: process.env.NODE_ENV?.toLowerCase() || "release", // "debug"
-  host: process.env.HOST || "127.0.0.1",
-  port: process.env.PORT || "3000",
+  env: process.env.NODE_ENV?.toLowerCase() || 'release', // "debug"
+  host: process.env.HOST || '127.0.0.1',
+  port: process.env.PORT || '3000',
   statistics: {
     save: true,
     interval: 1,
@@ -18,13 +18,13 @@ let config = {
   backup: {
     enabled: true,
     nodelist_path: join(__dirname, '../../', 'cold_nodelist.json'),
-    networkStat_path: join(__dirname, '../../', 'cold_networkStat.json')
+    networkStat_path: join(__dirname, '../../', 'cold_networkStat.json'),
   },
-  verboseLog: false
-};
+  verboseLog: false,
+}
 
 // should NOT log the secret or password
-const { secret, password, ...safeConfig } = config;
+const { secret, password, ...safeConfig } = config
 console.log('monitor config', safeConfig)
 
 export default config
