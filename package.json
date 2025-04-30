@@ -51,7 +51,7 @@
   },
   "dependencies": {
     "@shardeum-foundation/lib-archiver-discovery": "1.2.0-prerelease.4",
-    "@shardeum-foundation/monitor-client": "2.9.0-prerelease.1",
+    "@shardeum-foundation/monitor-client": "2.9.0-prerelease.2",
     "axios": "0.24.0",
     "bcrypt-nodejs": "0.0.3",
     "body-parser": "1.18.3",
