@@ -3,7 +3,8 @@ require('dotenv').config()
 let config = {
   env: process.env.NODE_ENV?.toLowerCase() || 'release', // "debug"
   host: process.env.HOST || '127.0.0.1',
-  port: process.env.PORT || '3000',
+  port: process.env.PORT || '3000', // API port default 3000
+  guiPort: process.env.GUI_PORT || '3001', // GUI port default 3001
   statistics: {
     save: true,
     interval: 1,
