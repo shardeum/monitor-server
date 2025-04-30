@@ -154,6 +154,8 @@ app.set('views', viewDirectory)
 app.engine('html', require('ejs').renderFile)
 app.use(express.static(staticDirectory))
 
+// Provide MONITOR_API_URL to EJS templates (frontend can read via window.MONITOR_API_URL)
+app.locals.MONITOR_API_URL = process.env.MONITOR_API_URL || `http://localhost:${CONFIG.port}/api`
 // ensure log directory exists
 fs.existsSync(logDirectory) || fs.mkdirSync(logDirectory)
 
@@ -572,19 +574,32 @@ app.get('/get-newest-cycle', async (req, res) => {
   }
 })
 
-app.use('/api', APIRoutes)
+// --- API APP SETUP ---
+const apiApp = express();
+const apiServer = http.createServer(apiApp);
 
-// catch 404 and forward to error handler
-app.use((req, res, next) => {
+// Duplicate API middleware
+apiApp.use(bodyParser.json({ limit: '50mb' }))
+apiApp.use(bodyParser.urlencoded({ limit: '50mb', extended: true }))
+apiApp.use(cookieParser())
+apiApp.use(compress())
+apiApp.use(methodOverride())
+apiApp.use(helmet())
+apiApp.use(cors())
+
+// Mount /api routes
+apiApp.use('/api', APIRoutes)
+
+// API 404 handler
+apiApp.use((req, res, next) => {
   const error = new Error('API not found!')
   error.message = '404'
   return next(error)
 })
-
-app.use((err, req, res, next) => {
-  Logger.mainLogger.error('Caught error in error handling middleware', err)
+// API error handler
+apiApp.use((err, req, res, next) => {
+  Logger.mainLogger.error('Caught error in API error handling middleware', err)
   Logger.mainLogger.error('Request:', req.url)
-
   return res.status(err.status || 500).json({
     error: {
       message: err.message,
@@ -657,12 +672,22 @@ io.on('connection', (socket) => {
 // })
 
 const start = () => {
-  server.listen(CONFIG.port, (err) => {
+  // Start API server
+  apiServer.listen(CONFIG.port, (err) => {
     if (err) {
       console.error(err)
       throw err
     }
-    console.log(`server started on port ${CONFIG.port} (${CONFIG.env})`)
+    console.log(`API server started on port ${CONFIG.port} (${CONFIG.env})`)
+    Logger.mainLogger.info(`API server started on port ${CONFIG.port}`)
+  })
+  // Start GUI server
+  server.listen(CONFIG.guiPort, (err) => {
+    if (err) {
+      console.error(err)
+      throw err
+    }
+    console.log(`GUI server started on port ${CONFIG.guiPort} (${CONFIG.env})`)
     console.log('history logger', Logger.historyLogger.info)
     Logger.historyLogger.info(`started`)
   })
