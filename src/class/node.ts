@@ -634,7 +634,7 @@ export class Node {
       )
       return
     }
-    if (!(data.timestamp && Math.abs(data.timestamp - cycleRecordTimestamp) < 60)) {
+    if (!(data.timestamp && Math.abs(data.timestamp - cycleRecordTimestamp) < 120)) {
       Logger.ignoredLogger.info(`TIMESTAMP: node ${nodeId} with ${data.timestamp} expected ${cycleRecordTimestamp}.`)
       return
     }
