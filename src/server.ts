@@ -186,6 +186,33 @@ global.User.create({
 
 app.use('/', healthCheckRouter)
 
+// Proxy API requests to the API server
+app.use('/api', (req, res) => {
+  const apiUrl = app.locals.MONITOR_API_URL || `http://localhost:${CONFIG.port}/api`
+  const targetUrl = apiUrl.replace('/api', '') + req.url
+  
+  // Forward the request to the API server
+  const options = {
+    hostname: new URL(targetUrl).hostname,
+    port: new URL(targetUrl).port || 80,
+    path: new URL(targetUrl).pathname + new URL(targetUrl).search,
+    method: req.method,
+    headers: req.headers
+  }
+  
+  const proxyReq = http.request(options, (proxyRes) => {
+    res.writeHead(proxyRes.statusCode, proxyRes.headers)
+    proxyRes.pipe(res)
+  })
+  
+  proxyReq.on('error', (err) => {
+    console.error('Proxy error:', err)
+    res.status(500).json({ error: 'Proxy error' })
+  })
+  
+  req.pipe(proxyReq)
+})
+
 app.get('/', (req, res) => {
   const numActiveNodes = node.getActiveList().length
   const maxNodeCount = 200
@@ -194,14 +221,14 @@ app.get('/', (req, res) => {
     return res.redirect('/large-network')
   }
 
-  res.render('index.html', { title: 'test' })
+  res.render('index.html', { title: 'test', MONITOR_API_URL: app.locals.MONITOR_API_URL })
 })
 app.get('/signin', (req, res) => {
-  res.render('signin.html', { title: 'test' })
+  res.render('signin.html', { title: 'test', MONITOR_API_URL: app.locals.MONITOR_API_URL })
 })
 app.get('/log', (req, res) => {
   console.log('log server page')
-  res.render('log.html', { title: 'test' })
+  res.render('log.html', { title: 'test', MONITOR_API_URL: app.locals.MONITOR_API_URL })
 })
 
 app.get('/favicon.ico', (req, res) => {
@@ -210,35 +237,39 @@ app.get('/favicon.ico', (req, res) => {
 
 app.get('/history-log', (req, res) => {
   console.log('log server page')
-  res.render('history-log.html', { title: 'test' })
+  res.render('history-log.html', { title: 'test', MONITOR_API_URL: app.locals.MONITOR_API_URL })
 })
 
 app.get('/large-network', (req, res) => {
-  res.render('large-network.html')
+  res.render('large-network.html', { MONITOR_API_URL: app.locals.MONITOR_API_URL })
 })
 
 app.get('/node-loads', (req, res) => {
-  res.render('node-loads.html')
+  res.render('node-loads.html', { MONITOR_API_URL: app.locals.MONITOR_API_URL })
 })
 
 app.get('/sync-details', (req, res) => {
-  res.render('sync-details.html')
+  res.render('sync-details.html', { MONITOR_API_URL: app.locals.MONITOR_API_URL })
 })
 
 app.get('/sync', (req, res) => {
-  res.render('sync.html')
+  res.render('sync.html', { MONITOR_API_URL: app.locals.MONITOR_API_URL })
 })
 
 app.get('/chart', (req, res) => {
-  res.render('chart.html')
+  res.render('chart.html', { MONITOR_API_URL: app.locals.MONITOR_API_URL })
 })
 
 app.get('/monitor-events', (_req, res) => {
-  res.render('monitor-events.html')
+  res.render('monitor-events.html', { MONITOR_API_URL: app.locals.MONITOR_API_URL })
 })
 
 app.get('/app-versions', (_req, res) => {
-  res.render('app-versions.html')
+  res.render('app-versions.html', { MONITOR_API_URL: app.locals.MONITOR_API_URL })
+})
+
+app.get('/api-config', (_req, res) => {
+  res.json({ MONITOR_API_URL: app.locals.MONITOR_API_URL })
 })
 
 app.get('/summary', async (req, res) => {
