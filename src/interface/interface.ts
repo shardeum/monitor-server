@@ -75,6 +75,15 @@ export interface SyncReport {
   timestamp: number
 }
 
+export interface ProblematicNodeInfo {
+  isProblematic: boolean
+  totalRefutes: number
+  maxConsecutiveRefutes: number
+  refutePercentage: number
+  cycleRefuteHistory: boolean[]
+  newestCycle?: number
+}
+
 export interface ActiveReport {
   nodeId: string
   repairsStarted: number
@@ -120,6 +129,7 @@ export interface ActiveReport {
   appData: NodeInfoAppData
   memory: MemoryInfo
   activeTimestamp: number
+  problematicNodeInfo?: ProblematicNodeInfo
 }
 
 export type CountedEvent = {

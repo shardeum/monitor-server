@@ -13,6 +13,7 @@ const getSyncReports = require('./getSyncReports')
 const getTxCoverage = require('./txCoverage')
 const history = require('./history')
 const getScaleReports = require('./getScaleReports')
+const getProblematicNodes = require('./getProblematicNodes')
 const mock = require('./mock')
 const countedEvents = require('./countedEvents')
 const invalidIPs = require('./invalidIPs')
@@ -34,6 +35,7 @@ export const Controller = {
   getTxCoverage,
   history,
   getScaleReports,
+  getProblematicNodes,
   mock,
   getRemoved,
   rareCounter,

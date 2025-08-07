@@ -15,6 +15,7 @@ import {
   CountedEvent,
   MonitorCountedEventMap,
   NodeInfoAppData,
+  ProblematicNodeInfo,
 } from '../interface/interface'
 import { isBogonIP, isInvalidIP, mapToObjectRecursive, MarkerCount } from '../utils'
 import { getFromArchiver } from '@shardeum-foundation/lib-archiver-discovery'
@@ -62,6 +63,7 @@ export class Node {
   cycleMarkerCount: MarkerCount
   queryArchiverInterval: NodeJS.Timeout
   queryArchiverIntervalTime: number
+  problematicNodeData: Map<string, ProblematicNodeInfo & { nodeId: string; ip: string; port: number }>
 
   constructor() {
     this.totalTxInjected = 0
@@ -91,6 +93,7 @@ export class Node {
     this.joiningAppData = new Map<string, NodeInfoAppData>()
     this.syncAppData = new Map<string, NodeInfoAppData>()
     this.networkId = 'none'
+    this.problematicNodeData = new Map()
 
     this.nodes = this._createEmptyNodelist()
 
@@ -533,6 +536,8 @@ export class Node {
         )
       }
       delete this.nodes.active[nodeId]
+      // Also remove from problematic node data
+      this.problematicNodeData.delete(nodeId)
       // clean old removed nodes to prevent memory leak
       for (let counter in this.removedNodes) {
         if (parseInt(counter) + 5 < this.counter) {
@@ -699,6 +704,11 @@ export class Node {
     )
 
     this.appData.set(nodeId, data.appData)
+
+    // Store problematic node info if provided
+    if (data.problematicNodeInfo) {
+      this.updateProblematicNodeData(nodeId, data.problematicNodeInfo, data.nodeIpInfo)
+    }
 
     if (this.counter < data.cycleCounter) this.counter = data.cycleCounter
 
@@ -1164,6 +1174,26 @@ export class Node {
 
   getActiveList() {
     return Object.values(this.nodes.active)
+  }
+
+  updateProblematicNodeData(nodeId: string, problematicInfo: ProblematicNodeInfo, nodeIpInfo: NodeIpInfo): void {
+    this.problematicNodeData.set(nodeId, {
+      nodeId,
+      ip: nodeIpInfo.externalIp,
+      port: nodeIpInfo.externalPort,
+      ...problematicInfo,
+    })
+  }
+
+  getProblematicNodes() {
+    const problematicNodes = []
+    for (const [nodeId, data] of this.problematicNodeData) {
+      // Only include nodes that are still active
+      if (this.nodes.active[nodeId]) {
+        problematicNodes.push(data)
+      }
+    }
+    return problematicNodes
   }
 
   createNodeListBackup(filePath: string) {
