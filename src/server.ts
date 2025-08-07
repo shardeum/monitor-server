@@ -575,8 +575,8 @@ app.get('/get-newest-cycle', async (req, res) => {
 })
 
 // --- API APP SETUP ---
-const apiApp = express();
-const apiServer = http.createServer(apiApp);
+const apiApp = express()
+const apiServer = http.createServer(apiApp)
 
 // Duplicate API middleware
 apiApp.use(bodyParser.json({ limit: '50mb' }))
