@@ -81,6 +81,8 @@ export interface ProblematicNodeInfo {
   maxConsecutiveRefutes: number
   refutePercentage: number
   cycleRefuteHistory: boolean[]
+  oldestCycle?: number
+  newestCycle?: number
 }
 
 export interface ActiveReport {

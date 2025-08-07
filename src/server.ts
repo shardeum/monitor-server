@@ -229,6 +229,10 @@ app.get('/sync', (req, res) => {
   res.render('sync.html')
 })
 
+app.get('/problematic-nodes', (req, res) => {
+  res.render('problematic-nodes.html')
+})
+
 app.get('/chart', (req, res) => {
   res.render('chart.html')
 })
