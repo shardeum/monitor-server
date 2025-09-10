@@ -117,7 +117,7 @@ export class Node {
     }
   }
 
-  queryArchiverRetries() {
+  async queryArchiverRetries() {
     // Keep trying to get cycleInfo from the archiver for 150 seconds
     // Upon receiving cycleInfo, apply it and resolve
     // If no cycleInfo is received after 150 seconds, reject
@@ -140,10 +140,16 @@ export class Node {
           })
       }, 10000)
     })
-      .then((cycleRecord: any) => {
+      .then(async (cycleRecord: any) => {
         if (cycleRecord && cycleRecord.cycleInfo && cycleRecord.cycleInfo.length > 0) {
           this.applyArchiverCycleData(cycleRecord)
           Logger.mainLogger.info(`Archiver cycle record obtained. Ready to receive and validate heartbeats.`)
+          
+          // Initialize node lists from archiver only if they are currently empty
+          if (Object.keys(this.nodes.active).length === 0 && Object.keys(this.nodes.syncing).length === 0) {
+            Logger.mainLogger.info('Node lists are empty, initializing from archiver...')
+            await this.initializeFromArchiver()
+          }
         } else {
           Logger.mainLogger.error(`Received empty cycle record from archiver`)
         }
@@ -198,6 +204,159 @@ export class Node {
       this.queryArchiverInterval = setInterval(this.queryArchiverRetries.bind(this), this.queryArchiverIntervalTime)
     }
   }
+
+  async initializeFromArchiver(): Promise<void> {
+    Logger.mainLogger.info('Initializing monitor with node data from archiver...')
+    try {
+      // Fetch active nodes
+      const activeNodes = await this.getArchiverNodeList(true, false, false)
+      if (activeNodes && activeNodes.nodeList) {
+        Logger.mainLogger.info(`Found ${activeNodes.nodeList.length} active nodes from archiver`)
+        for (const node of activeNodes.nodeList) {
+          this.nodes.active[node.id] = {
+            nodeId: node.id,
+            nodeIpInfo: {
+              externalIp: node.ip,
+              externalPort: node.port,
+              internalIp: node.ip,
+              internalPort: node.port + 1000
+            },
+            timestamp: Date.now(),
+            crashed: false,
+            isLost: false,
+            isRefuted: false,
+            activeTimestamp: Date.now(),
+            // Default values for required ActiveReport fields
+            repairsStarted: 0,
+            repairsFinished: 0,
+            appState: 'active',
+            cycleMarker: '',
+            cycleCounter: this.counter,
+            nodelistHash: '',
+            desiredNodes: 0,
+            lastScalingTypeWinner: '',
+            lastScalingTypeRequested: '',
+            txInjected: 0,
+            txApplied: 0,
+            txRejected: 0,
+            txExpired: 0,
+            txProcessed: 0,
+            reportInterval: 0,
+            networkId: this.networkId,
+            txCoverage: null,
+            partitionReport: {},
+            globalSync: false,
+            partitions: 0,
+            partitionsCovered: 0,
+            currentLoad: {
+              networkLoad: 0,
+              nodeLoad: 0
+            },
+            queueLength: 0,
+            txTimeInQueue: 0,
+            rareCounters: {},
+            shardusVersion: '',
+            countedEvents: [],
+            appData: {
+              shardeumVersion: '',
+              minVersion: '',
+              activeVersion: '',
+              latestVersion: '',
+              operatorCLIVersion: '',
+              operatorGUIVersion: '',
+              appStartupTimestamp: 0
+            },
+            memory: {
+              timestamp: Date.now(),
+              rss: 0,
+              heapTotal: 0,
+              heapUsed: 0,
+              external: 0,
+              arrayBuffers: 0
+            }
+          }
+          
+          // Add to history
+          this.history[node.id] = {
+            data: {
+              nodeIpInfo: {
+                externalIp: node.ip,
+                externalPort: node.port,
+                internalIp: node.ip,
+                internalPort: node.port + 1000
+              }
+            },
+            joined: Date.now(),
+            active: Date.now()
+          }
+        }
+      }
+
+      // Fetch syncing nodes
+      const syncingNodes = await this.getArchiverNodeList(false, true, false)
+      if (syncingNodes && syncingNodes.nodeList) {
+        Logger.mainLogger.info(`Found ${syncingNodes.nodeList.length} syncing nodes from archiver`)
+        for (const node of syncingNodes.nodeList) {
+          this.nodes.syncing[node.id] = {
+            nodeId: node.id,
+            publicKey: node.publicKey,
+            nodeIpInfo: {
+              externalIp: node.ip,
+              externalPort: node.port,
+              internalIp: node.ip,
+              internalPort: node.port + 1000
+            },
+            timestamp: Date.now()
+          }
+          
+          // Add to history
+          this.history[node.id] = {
+            data: {
+              nodeIpInfo: {
+                externalIp: node.ip,
+                externalPort: node.port,
+                internalIp: node.ip,
+                internalPort: node.port + 1000
+              }
+            },
+            joined: Date.now()
+          }
+        }
+      }
+
+      // Fetch standby nodes
+      const standbyNodes = await this.getArchiverNodeList(false, false, true)
+      if (standbyNodes && standbyNodes.nodeList) {
+        Logger.mainLogger.info(`Found ${standbyNodes.nodeList.length} standby nodes from archiver`)
+        for (const node of standbyNodes.nodeList) {
+          this.nodes.standby[node.publicKey] = {
+            nodeIpInfo: {
+              externalIp: node.ip,
+              externalPort: node.port,
+              internalIp: node.ip,
+              internalPort: node.port + 1000
+            }
+          }
+        }
+      }
+
+      Logger.mainLogger.info('Successfully initialized monitor with archiver data')
+      Logger.mainLogger.info(`Active: ${Object.keys(this.nodes.active).length}, Syncing: ${Object.keys(this.nodes.syncing).length}, Standby: ${Object.keys(this.nodes.standby).length}`)
+    } catch (error) {
+      Logger.mainLogger.error('Failed to initialize from archiver:', error)
+    }
+  }
+
+  async getArchiverNodeList(activeOnly: boolean, syncingOnly: boolean, standbyOnly: boolean): Promise<any> {
+    const params = new URLSearchParams()
+    if (activeOnly) params.set('activeOnly', 'true')
+    if (syncingOnly) params.set('syncingOnly', 'true')
+    if (standbyOnly) params.set('standbyOnly', 'true')
+    
+    const endpoint = `full-nodelist${params.toString() ? '?' + params.toString() : ''}`
+    return await getFromArchiver(endpoint)
+  }
+
   calculateCycleRecordCounter() {
     const now = Date.now() / 1000
     const diffSeconds = now - this.cycleRecordStart

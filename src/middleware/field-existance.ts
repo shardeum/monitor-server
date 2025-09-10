@@ -7,8 +7,8 @@ const FieldExistance =
       return !req.body.hasOwnProperty(field)
     })
     if (missing) {
-      let error = new Error(`${_field} is required`)
-      error.message = '400'
+      let error: any = new Error(`${_field} is required`)
+      error.status = 400
       return next(error)
     }
     next()

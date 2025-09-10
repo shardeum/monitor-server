@@ -192,14 +192,14 @@ app.get('/', (req, res) => {
     return res.redirect('/large-network')
   }
 
-  res.render('index.html', { title: 'test' })
+  res.render('index.html', { title: 'test', MONITOR_API_URL: process.env.MONITOR_API_URL })
 })
 app.get('/signin', (req, res) => {
-  res.render('signin.html', { title: 'test' })
+  res.render('signin.html', { title: 'test', MONITOR_API_URL: process.env.MONITOR_API_URL })
 })
 app.get('/log', (req, res) => {
   console.log('log server page')
-  res.render('log.html', { title: 'test' })
+  res.render('log.html', { title: 'test', MONITOR_API_URL: process.env.MONITOR_API_URL })
 })
 
 app.get('/favicon.ico', (req, res) => {
@@ -208,35 +208,35 @@ app.get('/favicon.ico', (req, res) => {
 
 app.get('/history-log', (req, res) => {
   console.log('log server page')
-  res.render('history-log.html', { title: 'test' })
+  res.render('history-log.html', { title: 'test', MONITOR_API_URL: process.env.MONITOR_API_URL })
 })
 
 app.get('/large-network', (req, res) => {
-  res.render('large-network.html')
+  res.render('large-network.html', { MONITOR_API_URL: process.env.MONITOR_API_URL })
 })
 
 app.get('/node-loads', (req, res) => {
-  res.render('node-loads.html')
+  res.render('node-loads.html', { MONITOR_API_URL: process.env.MONITOR_API_URL })
 })
 
 app.get('/sync-details', (req, res) => {
-  res.render('sync-details.html')
+  res.render('sync-details.html', { MONITOR_API_URL: process.env.MONITOR_API_URL })
 })
 
 app.get('/sync', (req, res) => {
-  res.render('sync.html')
+  res.render('sync.html', { MONITOR_API_URL: process.env.MONITOR_API_URL })
 })
 
 app.get('/chart', (req, res) => {
-  res.render('chart.html')
+  res.render('chart.html', { MONITOR_API_URL: process.env.MONITOR_API_URL })
 })
 
 app.get('/monitor-events', (_req, res) => {
-  res.render('monitor-events.html')
+  res.render('monitor-events.html', { MONITOR_API_URL: process.env.MONITOR_API_URL })
 })
 
 app.get('/app-versions', (_req, res) => {
-  res.render('app-versions.html')
+  res.render('app-versions.html', { MONITOR_API_URL: process.env.MONITOR_API_URL })
 })
 
 app.get('/summary', async (req, res) => {
