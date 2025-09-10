@@ -15,15 +15,14 @@ const makeShortHash = (x: string, n = 4) => {
 }
 
 const objToString = Object.prototype.toString
-const objKeys =
-  ((obj) => {
-    const keys = []
-    // tslint:disable-next-line: forin
-    for (const name in obj) {
-      keys.push(name)
-    }
-    return keys
-  }) || Object.keys
+const objKeys = (obj) => {
+  const keys = []
+  // tslint:disable-next-line: forin
+  for (const name in obj) {
+    keys.push(name)
+  }
+  return keys
+} //|| Object.keys #the thing before the || is always truthy so Object.keys is never used. leaving it here for posterity
 
 export const stringifyReduce = (val, isArrayProp?: boolean) => {
   let i, max, str, keys, key, propVal, toStr
