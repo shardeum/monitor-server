@@ -1,51 +1,45 @@
 import { NextFunction, Response } from 'express'
 import { RequestWithBody } from '../interface/interface'
-import axios from 'axios'
+import { getFromArchiver } from '@shardeum-foundation/lib-archiver-discovery'
+
+let foundationNodesCache: { nodes: unknown[]; timestamp: number } | null = null
+const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes in milliseconds
 
 async function getListOfFoundationNodes(): Promise<unknown[]> {
-  /*
-    20250121.S.I. - It may make sense to cache this list in the future to reduce unnecessary network requests. It is unknown
-    how ofter the lists are update, so for now we'll make the request to the GCP bucket to retrieve the data every time this function
-    is invoked.
-     */
-  const getFoundationNodes = async (url: string): Promise<{ data: { nodes: any[] } }> => {
-    let res = {
-      data: {
-        nodes: [],
-      },
-    }
-    try {
-      const a = new Date().getTime()
-      res = await axios.get(url, {
-        timeout: 10000,
-      })
-      console.log(`duration: ${new Date().getTime() - a}, url: ${url}`)
-    } catch (error) {
-      console.error(error)
-    }
-    return res
+  // Check if we have cached data that's still valid
+  if (foundationNodesCache && Date.now() - foundationNodesCache.timestamp < CACHE_DURATION) {
+    console.log('Returning cached foundation nodes')
+    return foundationNodesCache.nodes
   }
 
-  let nodes = []
   try {
-    const results = await Promise.all([
-      getFoundationNodes('https://storage.googleapis.com/shardeum-info-and-counts/network/itn4/nodeInfo.json'),
-      getFoundationNodes('https://storage.googleapis.com/shardeum-info-and-counts/network/bb/nodeInfo.json'),
-      getFoundationNodes('https://storage.googleapis.com/shardeum-info-and-counts/network/dev-us/nodeInfo.json'),
-      getFoundationNodes('https://storage.googleapis.com/shardeum-info-and-counts/network/dev-apac/nodeInfo.json'),
-    ])
-    for (let i = 0; i < results.length; i++) {
-      nodes.push(...results[i].data.nodes)
+    const result = await getFromArchiver('full-nodelist?activeOnly=true')
+    if (result && result.nodeList) {
+      const foundationNodes = result.nodeList.filter((node: any) => node.foundationNode === true)
+      
+      // Cache the results
+      foundationNodesCache = {
+        nodes: foundationNodes,
+        timestamp: Date.now()
+      }
+      
+      console.log(`Found ${foundationNodes.length} foundation nodes from archiver`)
+      return foundationNodes
     }
   } catch (error) {
-    console.error(error)
+    console.error('Error fetching foundation nodes from archiver:', error)
   }
 
-  return nodes
+  // Return cached data if available, even if stale, as fallback
+  if (foundationNodesCache) {
+    console.log('Returning stale cached foundation nodes due to error')
+    return foundationNodesCache.nodes
+  }
+
+  return []
 }
 
-export const listFoundationNodes = (req: RequestWithBody, res: Response, next: NextFunction) => {
-  let nodes = []
+export const listFoundationNodes = (_req: RequestWithBody, res: Response, _next: NextFunction) => {
   getListOfFoundationNodes()
     .then((nodes) => {
       res.status(200).send(nodes)
