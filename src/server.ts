@@ -688,8 +688,6 @@ setupArchiverDiscovery({
   })
   .catch((e) => {
     console.error('Error setting up archiver discovery', e)
-    console.log('Starting monitor anyway in debug mode without archiver')
-    start()
   })
 
 process.on('SIGINT', async () => {
