@@ -106,6 +106,7 @@ export class Node {
     setInterval(this.updateStandbyNodes.bind(this), 1000 * 60 * 1) // Update standby nodes every cycle
     setInterval(this.checkStandbyNodes.bind(this), 1000 * 60 * 5) // Check standby nodes every 5 minutes
     setInterval(this.checkSyncingNode.bind(this), 1000 * 60 * 1) // Check syncing nodes every cycle
+    setInterval(this.checkDeadOrAlive.bind(this), 1000 * 60 * 1) // Periodic cleanup of inactive nodes
   }
 
   private _createEmptyNodelist(): NodeList {
@@ -250,7 +251,10 @@ export class Node {
             partitionsCovered: 0,
             currentLoad: {
               networkLoad: 0,
-              nodeLoad: 0
+              nodeLoad: {
+                internal: 0,
+                external: 0
+              }
             },
             queueLength: 0,
             txTimeInQueue: 0,

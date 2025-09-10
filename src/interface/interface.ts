@@ -106,7 +106,10 @@ export interface ActiveReport {
   partitionsCovered: number
   currentLoad: {
     networkLoad: number
-    nodeLoad: number
+    nodeLoad: {
+      internal: number
+      external: number
+    }
   }
   queueLength: number
   txTimeInQueue: number

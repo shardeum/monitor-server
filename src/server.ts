@@ -576,8 +576,8 @@ app.use('/api', APIRoutes)
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
-  const error = new Error('API not found!')
-  error.message = '404'
+  const error: any = new Error('API not found!')
+  error.status = 404
   return next(error)
 })
 
@@ -688,6 +688,8 @@ setupArchiverDiscovery({
   })
   .catch((e) => {
     console.error('Error setting up archiver discovery', e)
+    console.log('Starting monitor anyway in debug mode without archiver')
+    start()
   })
 
 process.on('SIGINT', async () => {

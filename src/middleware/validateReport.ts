@@ -55,7 +55,11 @@ function validateReport(arg) {
     console.log(`No txProcessed`)
     return false
   }
-  if (!isExist(arg.nodeIpInfo) && typeof arg.nodeIpInfo === 'object') {
+  if (!isExist(arg.nodeIpInfo) || typeof arg.nodeIpInfo !== 'object') {
+    console.log(`No nodeIpInfo or not an object`)
+    return false
+  }
+  if (arg.nodeIpInfo) {
     if (!arg.nodeIpInfo.externalIp || typeof arg.nodeIpInfo.externalIp !== 'string') {
       console.log(`No externalIp`)
       return false
